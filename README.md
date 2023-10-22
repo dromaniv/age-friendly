@@ -4,7 +4,7 @@ We're currently in the process of developing a program that will effectively add
 
 ## Setup
 
-- Install [Git](https://git-scm.com/downloads) and clone the repository by running `git clone age-friendly` in the directory you want to clone the repository to
+- Install [Git](https://git-scm.com/downloads) and clone the repository by running `git clone https://github.com/Dmytro-Romaniv/age-friendly.git` in the directory you want to clone the repository to
 
 ### With Docker (recommended):
 
