@@ -30,3 +30,7 @@ We're currently in the process of developing a program that will effectively add
 2. Fill out the fields with the city and street
 3. _(Optional)_ Adjust the street length if the entire street is not highlighted
 4. Click the "Show" button
+
+## Useful tools:
+* [OpenStreetMap search engine](https://nominatim.openstreetmap.org/ui/search.html?q=Grobla%2C+Pozna%C5%84)
+* [OSMnx documentation](https://osmnx.readthedocs.io/en/stable/)
