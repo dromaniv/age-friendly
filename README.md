@@ -22,7 +22,7 @@ We're currently in the process of developing a program that will effectively add
 
 3. Run `pip install -r app/requirements.txt` in the root directory of the project
 
-4. Run `streamlit run app/app.py` in the root directory of the project
+4. Run `streamlit run app/dashboard.py` in the root directory of the project
 
 ## Usage
 
