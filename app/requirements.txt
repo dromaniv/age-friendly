@@ -1,0 +1,4 @@
+folium==0.14.0
+osmnx==1.7.0
+streamlit==1.27.2
+geopy==2.4.0
