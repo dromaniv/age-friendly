@@ -7,10 +7,6 @@ from geopy.geocoders import Nominatim
 # Caching functions for faster loading
 @st.cache_data
 def get_sidewalks(location_name):
-    # Get the district boundaries and add to the map
-    district = ox.geocode_to_gdf(location_name)
-    folium.GeoJson(district).add_to(m)
-
     # Find streets inside the district
     graph = ox.graph_from_place(location_name, network_type="all_private")
     streets_gdf = ox.graph_to_gdfs(graph, nodes=False, edges=True)
