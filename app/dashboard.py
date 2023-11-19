@@ -129,13 +129,17 @@ locale.setlocale(locale.LC_COLLATE, "pl_PL.UTF-8")
 with st.sidebar:
     city = st.selectbox("Select a city:", ["Poznań", "Warszawa"])
     districts = get_districts(city)
-    district = st.selectbox(
+    district_name = st.selectbox(
         "Select a district:",
         [""] + districts + ["ALL"],
     )
-    if district == "":
+    if district_name == "":
         st.warning("Please select a district.")
         st.stop()
+    elif district_name == "ALL":
+        location_name = f"{city}"
+    else:
+        location_name = f"{district_name}, {city}"
 
     st.write("# Map options:")
     show_benches = st.checkbox("Show benches", value=True)
@@ -171,14 +175,6 @@ with st.sidebar:
     st.write(
         "ℹ️ The file should contain `lon` and `lat` columns with coordinates of benches."
     )
-
-
-if district == "ALL":
-    # Aggregate data from all districts
-    location_name = f"{city}"
-else:
-    # Process data for a single district
-    location_name = f"{district}, {city}"
 
 
 # Initialize progress bar
