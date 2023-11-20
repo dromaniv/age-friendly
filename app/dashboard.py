@@ -54,7 +54,7 @@ def get_benches(location_name, _district, benches_file=None):
 
 @st.cache_data
 def calculate_distances(
-    _streets_gdf, _benches_gdf, location_name
+    _streets_gdf, _benches_gdf, location_name, benches_file=None
 ):  # location_name is needed for caching
     def get_coords(geometry):
         if isinstance(geometry, Point):
@@ -85,9 +85,9 @@ def get_districts(city_name):
     # This query looks for nodes tagged as 'place=suburb' within the city
     query = f"""
     [out:json];
-    area["name"="{city_name_formatted}"]->.searchArea;
+    area[name="{city_name}"]->.searchArea;
     (
-      node["place"="suburb"](area.searchArea);
+      rel(area.searchArea)["admin_level"="9"];
     );
     out body;
     """
@@ -127,7 +127,7 @@ locale.setlocale(locale.LC_COLLATE, "pl_PL.UTF-8")
 
 # Sidebar for user input
 with st.sidebar:
-    city = st.selectbox("Select a city:", ["Poznań", "Warszawa"])
+    city = st.text_input("City name:", value="Poznań")
     districts = get_districts(city)
     district_name = st.selectbox(
         "Select a district:",
@@ -240,21 +240,21 @@ progress_bar.progress(35)
 step_text.text("Calculating distances...")
 
 # Calculate distance of each street to the nearest bench
-streets_gdf = calculate_distances(streets_gdf, benches_gdf, location_name)
+street_distances = calculate_distances(streets_gdf, benches_gdf, location_name, benches_file=benches_file)
 
 progress_bar.progress(45)
 step_text.text("Filtering streets...")
 
 # Filter streets based on distance to benches
-streets_with_benches = streets_gdf[
-    streets_gdf["distance_to_bench"] <= 50 / 111320
+streets_with_benches = street_distances[
+    street_distances["distance_to_bench"] <= 50 / 111320
 ]  # 50 meters in degrees
 
 progress_bar.progress(50)
 step_text.text("Drawing streets...")
 
-total_streets = len(streets_gdf)
-for index, row in enumerate(streets_gdf.iterrows()):
+total_streets = len(street_distances)
+for index, row in enumerate(street_distances.iterrows()):
     if show_good_streets and row[1]["distance_to_bench"] <= good_street_value / 111320:
         color = good_street_color
     elif (
