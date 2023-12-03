@@ -1,4 +1,4 @@
-from math import ceil
+import math
 import folium
 import locale
 import requests
@@ -9,8 +9,8 @@ from shapely.geometry import Point
 from geopy.geocoders import Nominatim
 from scipy.spatial import KDTree
 import geopandas as gpd
-from shapely.ops import nearest_points, split
-from shapely.geometry import LineString, MultiPoint, GeometryCollection
+from shapely.ops import nearest_points, split, substring
+from shapely.geometry import LineString, MultiPoint, GeometryCollection, Point
 import time
 import numpy as np
 
@@ -58,65 +58,42 @@ def get_benches(location_name, _district, benches_file=None):
 
     return benches_gdf
 
+def segment_streets(streets_gdf, max_length):
+    new_geometries = []
+    expanded_data = {column: [] for column in streets_gdf.columns if column != 'geometry'}
+    
+    for _, row in streets_gdf.iterrows():
+        segments = segment_line(row.geometry, max_length)
+        new_geometries.extend(segments)
+        for column in expanded_data:
+            expanded_data[column].extend([row[column]] * len(segments))
+
+    new_streets_gdf = gpd.GeoDataFrame(expanded_data, geometry=new_geometries, crs=streets_gdf.crs)
+    return new_streets_gdf
+
+
 def segment_line(line, max_length):
-    # Iteratively divides a line into segments shorter than max_length
+    num_segments = math.ceil(line.length / max_length)
     segments = []
-    current_line = line
-    while current_line.length > max_length:
-        # Find the point at max_length along the line
-        split_point = current_line.interpolate(max_length)
-        # Split the line at this point
-        split_result = split(current_line, LineString([split_point.coords[0], split_point.coords[0]]))
-        first_segment = next((geom for geom in split_result.geoms if isinstance(geom, LineString)), None)
-        if first_segment is not None:
-            segments.append(first_segment)
-            current_line = LineString([split_point.coords[0], current_line.coords[-1]])
+
+    for i in range(num_segments):
+        start_dist = i * max_length
+        end_dist = min(start_dist + max_length, line.length)
+        if end_dist < line.length:
+            segment = LineString([line.interpolate(start_dist), line.interpolate(end_dist)])
         else:
-            break  # Break the loop if no valid segment is found
-    segments.append(current_line)  # Add the remaining part of the line
+            segment = LineString([line.interpolate(start_dist), line.coords[-1]])
+        segments.append(segment)
+
     return segments
 
-def segment_streets(streets_gdf, max_length):
-    # Segment streets longer than max_length
-    new_geometries = []
-    for _, row in streets_gdf.iterrows():
-        if row.geometry.length > max_length:
-            segments = segment_line(row.geometry, max_length)
-            new_geometries.extend(segments)
-        else:
-            new_geometries.append(row.geometry)
-    return new_geometries
-
 @st.cache_data
-<<<<<<< HEAD
 def calculate_distances(_streets_gdf, _benches_gdf, location_name, benches_file, method='projection', max_street_length=50):
     # Convert max_street_length from meters to degrees
     max_length_degrees = max_street_length / 111320
-
-    # IN PROGRESS
-    segmented_geometries = segment_streets(_streets_gdf, max_length_degrees)
-    new_streets_gdf = gpd.GeoDataFrame(geometry=segmented_geometries, crs=_streets_gdf.crs)
-
-    # Expand other columns from the original GeoDataFrame to match the new GeoDataFrame
-    expanded_data = {}
-    for column in _streets_gdf.columns:
-        if column != 'geometry':
-            expanded_column_data = []
-            for idx, row in _streets_gdf.iterrows():
-                segment_count = len(segment_line(row.geometry, max_length_degrees))
-                expanded_column_data.extend([row[column]] * segment_count)
-            expanded_data[column] = expanded_column_data
-
-    # Add expanded data to the new GeoDataFrame
-    for column, data in expanded_data.items():
-        new_streets_gdf[column] = data
+    new_streets_gdf = segment_streets(_streets_gdf, max_length_degrees)
 
     # Helper function to get coordinates
-=======
-def calculate_distances(
-    _streets_gdf, _benches_gdf, location_name, benches_file=None
-):  # location_name is needed for caching
->>>>>>> 738a3ed270588ee34df8e52c753d915012c948ae
     def get_coords(geometry):
         if isinstance(geometry, Point):
             return geometry
@@ -125,63 +102,15 @@ def calculate_distances(
 
     benches_coords = _benches_gdf.geometry.apply(get_coords)
 
-    # Default Method (Current Approach)
-    def distance_to_nearest_bench_default(row):
-        street_point = row.geometry.centroid
-        distances = [street_point.distance(bench) for bench in benches_coords]
-        return min(distances)
-
-    # KDTree Approach
-    def distance_kdtree(row, tree):
-        street_point = row.geometry.centroid
-        _, idx = tree.query(street_point.coords[0])
-        nearest_bench = benches_coords.iloc[idx]
-        return street_point.distance(nearest_bench)
-
     # Point Projection Approach
     def distance_projection(row, benches_line):
         street_point = row.geometry.centroid
         nearest_bench = nearest_points(street_point, benches_line)[1]
         return street_point.distance(nearest_bench)
 
-    # Select and apply the chosen method
-    if method == 'check_all':
-        timings = {}
-
-        # Default method
-        start_time = time.time()
-        distance_default = new_streets_gdf.apply(distance_to_nearest_bench_default, axis=1)
-        timings['default'] = time.time() - start_time
-
-        # KDTree method
-        start_time = time.time()
-        tree = KDTree([bench.coords[0] for bench in benches_coords])
-        distance_KDT = new_streets_gdf.apply(lambda row: distance_kdtree(row, tree), axis=1)
-        timings['kdtree'] = time.time() - start_time
-
-        # Projection method
-        start_time = time.time()
-        benches_line = benches_coords.unary_union
-        distance_proj = new_streets_gdf.apply(lambda row: distance_projection(row, benches_line), axis=1)
-        timings['projection'] = time.time() - start_time
-
-        print(timings)
-        # Select the fastest method
-        fastest_method = min(timings, key=timings.get)
-        
-        new_streets_gdf['distance_to_bench'] = distance_default if fastest_method == 'default' else distance_KDT if fastest_method == 'kdtree' else distance_proj
-
-
-    elif method == 'kdtree':
-        tree = KDTree([bench.coords[0] for bench in benches_coords])
-        new_streets_gdf['distance_to_bench'] = new_streets_gdf.apply(lambda row: distance_kdtree(row, tree), axis=1)
-
-    elif method == 'projection':
+    if method == 'projection':
         benches_line = benches_coords.unary_union
         new_streets_gdf['distance_to_bench'] = new_streets_gdf.apply(lambda row: distance_projection(row, benches_line), axis=1)
-
-    elif method == 'default':
-        new_streets_gdf['distance_to_bench'] = new_streets_gdf.apply(distance_to_nearest_bench_default, axis=1)
 
     else:
         raise ValueError("Invalid method specified")
@@ -239,11 +168,7 @@ locale.setlocale(locale.LC_COLLATE, "pl_PL.UTF-8")
 
 # Sidebar for user input
 with st.sidebar:
-<<<<<<< HEAD
     city = st.selectbox("Select a city:", ["Poznań", "Warszawa", "Hasselt", "Żnin"])
-=======
-    city = st.text_input("City name:", value="Poznań")
->>>>>>> 738a3ed270588ee34df8e52c753d915012c948ae
     districts = get_districts(city)
     district_name = st.selectbox(
         "Select a district:",
@@ -356,11 +281,7 @@ progress_bar.progress(35)
 step_text.text("Calculating distances...")
 
 # Calculate distance of each street to the nearest bench
-<<<<<<< HEAD
-streets_gdf = calculate_distances(streets_gdf, benches_gdf, location_name, benches_file)
-=======
 street_distances = calculate_distances(streets_gdf, benches_gdf, location_name, benches_file=benches_file)
->>>>>>> 738a3ed270588ee34df8e52c753d915012c948ae
 
 progress_bar.progress(45)
 step_text.text("Filtering streets...")
@@ -390,7 +311,7 @@ for index, row in enumerate(street_distances.iterrows()):
         locations=line_points,
         color=color,
         weight=4,
-        tooltip=f"Distance to nearest bench: {round(row[1]['distance_to_bench']*111320, 2)} meters, type: {row[1]['highway']}",
+        tooltip=f" {index} Distance to nearest bench: {round(row[1]['distance_to_bench']*111320, 2)} meters, type: {row[1]['highway']}",
     ).add_to(m)
 
     progress_bar.progress(0.5 + (index + 1) / total_streets / 2)
