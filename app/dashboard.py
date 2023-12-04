@@ -5,7 +5,8 @@ import requests
 import osmnx as ox
 import pandas as pd
 import streamlit as st
-from shapely.geometry import Point
+import shapely.geometry
+from shapely.geometry import Point, LineString, Polygon, MultiPolygon
 from geopy.geocoders import Nominatim
 from scipy.spatial import KDTree
 import geopandas as gpd
@@ -88,33 +89,39 @@ def segment_line(line, max_length):
     return segments
 
 @st.cache_data
-def calculate_distances(_streets_gdf, _benches_gdf, location_name, benches_file, method='projection', max_street_length=50):
+def calculate_distances(_streets_gdf, _benches_gdf, location_name, benches_file, method='geoseries', max_street_length=50):
     # Convert max_street_length from meters to degrees
     max_length_degrees = max_street_length / 111320
     new_streets_gdf = segment_streets(_streets_gdf, max_length_degrees)
 
-    # Helper function to get coordinates
-    def get_coords(geometry):
-        if isinstance(geometry, Point):
-            return geometry
-        else:
-            return geometry.centroid
+    if method == 'geoseries':
+        # Convert all bench geometries to points (if they are not already points)
+        _benches_gdf['geometry'] = _benches_gdf['geometry'].apply(lambda geom: geom.centroid if not isinstance(geom, Point) else geom)
 
-    benches_coords = _benches_gdf.geometry.apply(get_coords)
+        # Calculate the minimum distance from each street segment to any bench
+        new_streets_gdf['distance_to_bench'] = new_streets_gdf['geometry'].apply(lambda x: _benches_gdf.distance(x).min())
 
-    # Point Projection Approach
-    def distance_projection(row, benches_line):
-        street_point = row.geometry.centroid
-        nearest_bench = nearest_points(street_point, benches_line)[1]
-        return street_point.distance(nearest_bench)
+    elif method == 'projection':
+        # Helper function to get coordinates
+        def get_coords(geometry):
+            if isinstance(geometry, Point):
+                return geometry
+            else:
+                return geometry.centroid
 
-    if method == 'projection':
+        # Point Projection Approach
+        def distance_projection(row, benches_line):
+            street_point = row.geometry.centroid
+            nearest_bench = nearest_points(street_point, benches_line)[1]
+            return street_point.distance(nearest_bench)
+
+        benches_coords = _benches_gdf.geometry.apply(get_coords)
         benches_line = benches_coords.unary_union
         new_streets_gdf['distance_to_bench'] = new_streets_gdf.apply(lambda row: distance_projection(row, benches_line), axis=1)
 
     else:
         raise ValueError("Invalid method specified")
-    
+
     return new_streets_gdf
 
 
