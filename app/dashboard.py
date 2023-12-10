@@ -1,12 +1,13 @@
+import os
 import folium
 import locale
 import requests
 import osmnx as ox
 import pandas as pd
-import geopandas as gpd
 import streamlit as st
-from shapely.geometry import Point, Polygon
+import geopandas as gpd
 from geopy.geocoders import Nominatim
+from shapely.geometry import Point, Polygon
 
 
 # Caching functions for faster loading
@@ -78,33 +79,46 @@ def calculate_distances(
     return streets_gdf
 
 
-def generate_heatmap(excel_file_path):
-    df = pd.read_excel(excel_file_path)
+@st.cache_data
+def generate_heatmap(location_name):
+    location = geolocator.geocode(location_name)
 
-    inhabitants = df['LICZBA'].tolist()
-    inhabitants = list(dict.fromkeys(inhabitants)) # delete duplicate values
+    # read file in the same directory as the script
+    df = pd.read_excel(os.path.join(os.path.dirname(__file__), "poprodukcyjny.xlsx"))
+
+    inhabitants = df["LICZBA"].tolist()
+    inhabitants = list(dict.fromkeys(inhabitants))  # delete duplicate values
     inhabitants.sort()
 
     # slice 'MultiLineString ((' and ')' from the rows of df['boundaries']
-    df['boundaries'] = df['boundaries'].str.replace(r'^MultiLineString \(\(', '', regex=True)
-    df['boundaries'] = df['boundaries'].str.replace(r'\)\)$', '', regex=True)
+    df["boundaries"] = df["boundaries"].str.replace(
+        r"^MultiLineString \(\(", "", regex=True
+    )
+    df["boundaries"] = df["boundaries"].str.replace(r"\)\)$", "", regex=True)
 
     problematic_ids = [2503, 2760, 3255, 3535, 3546, 3564, 3565, 3566, 3576, 3579, 3583, 3601, 3645] # these aint right, just omit them
-    df_filtered = df[~df['OBJECTID'].isin(problematic_ids)]
+
+    df_filtered = df[~df["OBJECTID"].isin(problematic_ids)]
 
     # Create a Folium map centered at Poznań
-    m = folium.Map(location=[52.409538, 16.931992], zoom_start=12)
+    m = folium.Map(
+        location=[location.latitude, location.longitude],
+        zoom_start=13,
+        max_zoom=20,
+        tiles="cartodbpositron",
+        use_container_width=True,
+    )
 
     for index, row in df_filtered.iterrows():
         # Split the string into individual coordinate pairs
-        coordinate_pairs = row['boundaries'].split(', ')
+        coordinate_pairs = row["boundaries"].split(", ")
 
         # Calculate the color based on the value of inhabitants
-        color = color_B_to_R(inhabitants, row['LICZBA'])
-        
+        color = color_B_to_R(inhabitants, row["LICZBA"])
+
         # Convert each coordinate pair into a tuple of floats
         points = [tuple(map(float, pair.split())) for pair in coordinate_pairs]
-    
+
         # Create a Shapely Polygon from the list of points
         polygon = Polygon(points)
 
@@ -113,11 +127,18 @@ def generate_heatmap(excel_file_path):
 
         # Add the GeoJSON feature to the Folium map
         # Pass the color as a default argument to the lambda function
-        folium.GeoJson(feature,
-                   style_function=lambda x, color=color: {'fillColor': color, 'color': color, 'weight': 2.5, 'fillOpacity': 0.5},
-                   tooltip=row['LICZBA']).add_to(m)
+        folium.GeoJson(
+            feature,
+            style_function=lambda x, color=color: {
+                "fillColor": color,
+                "color": color,
+                "weight": 2.5,
+                "fillOpacity": 0.3,
+            },
+            tooltip=f"{row['LICZBA']} people",
+        ).add_to(m)
 
-    return m
+    return m._repr_html_()
 
 
 # Calculate the color based on the value of inhabitants
@@ -140,9 +161,6 @@ def color_B_to_R(inhabitants, value):
 
 
 def get_districts(city_name):
-    # Replace spaces with underscore in city name for URL formatting
-    city_name_formatted = city_name.replace(" ", "_")
-
     # Overpass API Query
     # This query looks for nodes tagged as 'place=suburb' within the city
     query = f"""
@@ -185,70 +203,82 @@ st.markdown(  # hardcoded style for the sidebar and the map
     unsafe_allow_html=True,
 )
 locale.setlocale(locale.LC_COLLATE, "pl_PL.UTF-8")
+geolocator = Nominatim(user_agent="street-highlighter")
 
 
 # Sidebar for user input
 with st.sidebar:
-    city = st.text_input("City name:", value="Poznań")
+    city = st.selectbox("Select a city:", ["Poznań"])
     districts = get_districts(city)
     district_name = st.selectbox(
         "Select a district:",
-        [""] + districts + ["ALL"],
+        [""] + districts, # + ["ALL"]
     )
     if district_name == "":
-        heatmap = generate_heatmap("age_heatmap\poprodukcyjny.xlsx")
-        # show heatmap
-        st.components.v1.html(heatmap._repr_html_(), height=4320, scrolling=False)
-        st.warning("Please select a district.")
-        st.stop()
-    elif district_name == "ALL":
-        location_name = f"{city}"
+        # Handle heatmap
+        st.warning("You can select a district or see the heatmap.")
+        heatmap = generate_heatmap(city)
     else:
-        location_name = f"{district_name}, {city}"
+        # Handle districts and main functionality
+        if district_name == "ALL":
+            location_name = f"{city}"
+        else:
+            location_name = f"{district_name}, {city}"
 
-    st.write("# Map options:")
-    show_benches = st.checkbox("Show benches", value=True)
-    st.write("\n")
+        st.write("# Map options:")
+        show_benches = st.checkbox("Show benches", value=True)
+        st.write("\n")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        show_good_streets = st.checkbox("Show good streets", value=True)
-    with col2:
-        good_street_color = st.color_picker("Good street color", value="#009900")
-    col3, col4 = st.columns(2)
-    with col3:
-        show_okay_streets = st.checkbox("Show okay streets", value=True)
-    with col4:
-        okay_street_color = st.color_picker("Okay street color", value="#FFA500")
-    col5, col6 = st.columns(2)
-    with col5:
-        show_bad_streets = st.checkbox("Show bad streets", value=True)
-    with col6:
-        bad_street_color = st.color_picker("Bad street color", value="#FF0000")
-    col7, col8 = st.columns(2)
-    with col7:
-        good_street_value = st.slider(
-            "Good street distance", min_value=0, max_value=300, value=50
+        col1, col2 = st.columns(2)
+        with col1:
+            show_good_streets = st.checkbox("Show good streets", value=True)
+        with col2:
+            good_street_color = st.color_picker("Good street color", value="#009900")
+        col3, col4 = st.columns(2)
+        with col3:
+            show_okay_streets = st.checkbox("Show okay streets", value=True)
+        with col4:
+            okay_street_color = st.color_picker("Okay street color", value="#FFA500")
+        col5, col6 = st.columns(2)
+        with col5:
+            show_bad_streets = st.checkbox("Show bad streets", value=True)
+        with col6:
+            bad_street_color = st.color_picker("Bad street color", value="#FF0000")
+        col7, col8 = st.columns(2)
+        with col7:
+            good_street_value = st.slider(
+                "Good street distance", min_value=0, max_value=300, value=50
+            )
+        with col8:
+            okay_street_value = st.slider(
+                "Okay street distance", min_value=0, max_value=300, value=150
+            )
+
+        st.write("\n")
+        benches_file = st.file_uploader("Upload benches file", type=["csv", "xlsx"])
+        st.write(
+            "ℹ️ The file should contain `lon` and `lat` columns with coordinates of benches."
         )
-    with col8:
-        okay_street_value = st.slider(
-            "Okay street distance", min_value=0, max_value=300, value=150
-        )
 
-    st.write("\n")
-    benches_file = st.file_uploader("Upload benches file", type=["csv", "xlsx"])
-    st.write(
-        "ℹ️ The file should contain `lon` and `lat` columns with coordinates of benches."
+# Heatmap
+if district_name == "":
+    st.components.v1.html(heatmap, height=4320, scrolling=False)
+    st.markdown(
+        """<style>
+            .st-emotion-cache-z5fcl4.ea3mdgi4 {
+                overflow: hidden;
+            }
+            """,
+        unsafe_allow_html=True,
     )
-
+    st.stop()
 
 # Initialize progress bar
 step_text = st.empty()
 progress_bar = st.progress(0)
-step_text.text("Initializing geolocator...")
+step_text.text("Finding location...")
 
-# Initialize geolocator
-geolocator = Nominatim(user_agent="street-highlighter")
+# Find location
 location = geolocator.geocode(location_name)
 
 progress_bar.progress(5)
