@@ -5,15 +5,11 @@ import requests
 import osmnx as ox
 import pandas as pd
 import streamlit as st
-import shapely.geometry
-from shapely.geometry import Point, LineString, Polygon, MultiPolygon
-from geopy.geocoders import Nominatim
-from scipy.spatial import KDTree
 import geopandas as gpd
-from shapely.ops import nearest_points, split, substring
-from shapely.geometry import LineString, MultiPoint, GeometryCollection, Point
-import time
-import numpy as np
+from geopy.geocoders import Nominatim
+from shapely.ops import nearest_points
+from shapely.geometry import Point, LineString
+from shapely.geometry import LineString, Point
 
 
 # Caching functions for faster loading
