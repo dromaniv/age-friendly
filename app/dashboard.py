@@ -1,4 +1,5 @@
 import os
+import math
 import folium
 import locale
 import requests
@@ -7,7 +8,8 @@ import pandas as pd
 import streamlit as st
 import geopandas as gpd
 from geopy.geocoders import Nominatim
-from shapely.geometry import Point, Polygon
+from shapely.ops import nearest_points
+from shapely.geometry import Point, LineString, Polygon
 
 
 # Caching functions for faster loading
@@ -53,30 +55,70 @@ def get_benches(location_name, _district, benches_file=None):
 
     return benches_gdf
 
+def segment_streets(streets_gdf, max_length):
+    new_geometries = []
+    expanded_data = {column: [] for column in streets_gdf.columns if column != 'geometry'}
+    
+    for _, row in streets_gdf.iterrows():
+        segments = segment_line(row.geometry, max_length)
+        new_geometries.extend(segments)
+        for column in expanded_data:
+            expanded_data[column].extend([row[column]] * len(segments))
+
+    new_streets_gdf = gpd.GeoDataFrame(expanded_data, geometry=new_geometries, crs=streets_gdf.crs)
+    return new_streets_gdf
+
+
+def segment_line(line, max_length):
+    num_segments = math.ceil(line.length / max_length)
+    segments = []
+
+    for i in range(num_segments):
+        start_dist = i * max_length
+        end_dist = min(start_dist + max_length, line.length)
+        if end_dist < line.length:
+            segment = LineString([line.interpolate(start_dist), line.interpolate(end_dist)])
+        else:
+            segment = LineString([line.interpolate(start_dist), line.coords[-1]])
+        segments.append(segment)
+
+    return segments
 
 @st.cache_data
-def calculate_distances(
-    _streets_gdf, _benches_gdf, location_name, benches_file=None
-):  # location_name is needed for caching
-    def get_coords(geometry):
-        if isinstance(geometry, Point):
-            return geometry
-        else:  # Because for some reason benches are sometimes Polygons and others...
-            return geometry.centroid
+def calculate_distances(_streets_gdf, _benches_gdf, location_name, benches_file, method='geoseries', max_street_length=50):
+    # Convert max_street_length from meters to degrees
+    max_length_degrees = max_street_length / 111320
+    new_streets_gdf = segment_streets(_streets_gdf, max_length_degrees)
 
-    benches_coords = benches_gdf.geometry.apply(get_coords)
+    if method == 'geoseries':
+        # Convert all bench geometries to points (if they are not already points)
+        _benches_gdf['geometry'] = _benches_gdf['geometry'].apply(lambda geom: geom.centroid if not isinstance(geom, Point) else geom)
 
-    # Calculate distance of each street centroid to the nearest bench
-    def distance_to_nearest_bench(row, benches_coords):
-        street_point = row.geometry.centroid
-        distances = [street_point.distance(bench) for bench in benches_coords]
-        return min(distances)
+        # Calculate the minimum distance from each street segment to any bench
+        new_streets_gdf['distance_to_bench'] = new_streets_gdf['geometry'].apply(lambda x: _benches_gdf.distance(x).min())
 
-    streets_gdf["distance_to_bench"] = streets_gdf.apply(
-        lambda row: distance_to_nearest_bench(row, benches_coords), axis=1
-    )
+    elif method == 'projection':
+        # Helper function to get coordinates
+        def get_coords(geometry):
+            if isinstance(geometry, Point):
+                return geometry
+            else:
+                return geometry.centroid
 
-    return streets_gdf
+        # Point Projection Approach
+        def distance_projection(row, benches_line):
+            street_point = row.geometry.centroid
+            nearest_bench = nearest_points(street_point, benches_line)[1]
+            return street_point.distance(nearest_bench)
+
+        benches_coords = _benches_gdf.geometry.apply(get_coords)
+        benches_line = benches_coords.unary_union
+        new_streets_gdf['distance_to_bench'] = new_streets_gdf.apply(lambda row: distance_projection(row, benches_line), axis=1)
+
+    else:
+        raise ValueError("Invalid method specified")
+
+    return new_streets_gdf
 
 
 @st.cache_data
@@ -365,7 +407,7 @@ for index, row in enumerate(street_distances.iterrows()):
         locations=line_points,
         color=color,
         weight=4,
-        tooltip=f"Distance to nearest bench: {round(row[1]['distance_to_bench']*111320, 2)} meters, type: {row[1]['highway']}",
+        tooltip=f" {index} Distance to nearest bench: {round(row[1]['distance_to_bench']*111320, 2)} meters, type: {row[1]['highway']}",
     ).add_to(m)
 
     progress_bar.progress(0.5 + (index + 1) / total_streets / 2)
