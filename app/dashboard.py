@@ -1,6 +1,7 @@
 import folium
 import locale
 import requests
+import numpy as np
 import osmnx as ox
 import pandas as pd
 import streamlit as st
@@ -12,17 +13,19 @@ from geopy.geocoders import Nominatim
 @st.cache_data
 def get_sidewalks(location_name):
     # Find streets inside the district
-    graph = ox.graph_from_place(location_name, network_type="all_private")
-    streets_gdf = ox.graph_to_gdfs(graph, nodes=False, edges=True)
-
-    # Extract sidewalks from the streets
-    streets_gdf = streets_gdf[
-        streets_gdf["highway"].apply(
-            lambda x: ["footway", "path", "pedestrian", "living_street"].__contains__(x)
-        )
-    ]
-    return streets_gdf
-
+    sidewalks_gdf = ox.features_from_place(location_name, tags={"highway": ["footway"]})
+    # Data preprocessing:
+    # Remove polygons
+    sidewalks_gdf = sidewalks_gdf[sidewalks_gdf.geometry.type != "Polygon"]
+    # Remove multipolygons
+    sidewalks_gdf = sidewalks_gdf[sidewalks_gdf.geometry.type != "MultiPolygon"]
+    # Remove crossings
+    sidewalks_gdf = sidewalks_gdf[sidewalks_gdf["footway"] != "crossing"]
+    # Calculate the length of each sidewalk
+    sidewalks_gdf["length"] = sidewalks_gdf.geometry.length
+    # Remove short sidewalks from the original GeoDataFrame
+    sidewalks_gdf = sidewalks_gdf[sidewalks_gdf["length"] >= 0.0005]
+    return sidewalks_gdf
 
 @st.cache_data
 def get_benches(location_name, _district, benches_file=None):
@@ -48,39 +51,49 @@ def get_benches(location_name, _district, benches_file=None):
             st.warning(
                 "The uploaded file does not contain `lon` and `lat` columns. Ignoring..."
             )
-
     return benches_gdf
 
 
-@st.cache_data
-def calculate_distances(
-    _streets_gdf, _benches_gdf, location_name, benches_file=None
-):  # location_name is needed for caching
-    def get_coords(geometry):
-        if isinstance(geometry, Point):
-            return geometry
-        else:  # Because for some reason benches are sometimes Polygons and others...
-            return geometry.centroid
-
-    benches_coords = benches_gdf.geometry.apply(get_coords)
-
-    # Calculate distance of each street centroid to the nearest bench
-    def distance_to_nearest_bench(row, benches_coords):
-        street_point = row.geometry.centroid
-        distances = [street_point.distance(bench) for bench in benches_coords]
-        return min(distances)
-
-    streets_gdf["distance_to_bench"] = streets_gdf.apply(
-        lambda row: distance_to_nearest_bench(row, benches_coords), axis=1
+def classify_sidewalks(sidewalks_gdf, benches_gdf, good_street_value, okay_street_value):
+    # Assign benches geometry list to each sidewalk
+    buffer_sidewalks = sidewalks_gdf.geometry.buffer(0.00007)
+    sidewalks_gdf["benches"] = buffer_sidewalks.apply(
+        lambda x: benches_gdf[benches_gdf.within(x)].geometry.tolist()
     )
 
-    return streets_gdf
+    # Function to check if there is a bench every meters along the sidewalk
+    def is_benched_every_x_meters(sidewalk, meters):
+        geometry = sidewalk.geometry
+        benches = sidewalk.benches
+        length = geometry.length
+        num_segments = int(np.ceil(length / meters))
+
+        for i in range(num_segments):
+            try:
+                segment_point = geometry.interpolate(i * meters)
+                close_bench = any([segment_point.distance(bench) <= meters for bench in benches])
+                if not close_bench:
+                    return False
+            except:
+                st.error(geometry)
+        return True
+    
+    # Classify sidewalks
+    sidewalks_gdf["good"] = sidewalks_gdf.apply(
+        lambda x: is_benched_every_x_meters(x, good_street_value), axis=1
+    )
+    sidewalks_gdf["okay"] = sidewalks_gdf.apply(
+        lambda x: is_benched_every_x_meters(x, okay_street_value), axis=1
+    )
+    sidewalks_gdf["bad"] = sidewalks_gdf.apply(
+        lambda x: not is_benched_every_x_meters(x, okay_street_value), axis=1
+    )
+    return sidewalks_gdf
+
 
 
 def get_districts(city_name):
-    # Replace spaces with underscore in city name for URL formatting
-    city_name_formatted = city_name.replace(" ", "_")
-
+    # Doesn't even work that well (e.g. no Łacina)
     # Overpass API Query
     # This query looks for nodes tagged as 'place=suburb' within the city
     query = f"""
@@ -164,11 +177,11 @@ with st.sidebar:
     with col7:
         good_street_value = st.slider(
             "Good street distance", min_value=0, max_value=300, value=50
-        )
+        ) / 111320
     with col8:
         okay_street_value = st.slider(
             "Okay street distance", min_value=0, max_value=300, value=150
-        )
+        ) / 111320
 
     st.write("\n")
     benches_file = st.file_uploader("Upload benches file", type=["csv", "xlsx"])
@@ -209,7 +222,7 @@ progress_bar.progress(15)
 step_text.text("Finding sidewalks...")
 
 # Find streets inside the district
-streets_gdf = get_sidewalks(location_name)
+sidewalks_gdf = get_sidewalks(location_name)
 
 progress_bar.progress(25)
 step_text.text("Finding benches...")
@@ -217,7 +230,7 @@ step_text.text("Finding benches...")
 # Find benches inside the district
 benches_gdf = get_benches(location_name, district, benches_file)
 
-progress_bar.progress(30)
+progress_bar.progress(35)
 if show_benches:
     step_text.text("Drawing benches...")
 
@@ -236,44 +249,47 @@ if show_benches:
             location=[bench_coords[1], bench_coords[0]], icon=icon, tooltip=tooltip
         ).add_to(m)
 
-progress_bar.progress(35)
-step_text.text("Calculating distances...")
+progress_bar.progress(40)
+step_text.text("Classifying sidewalks...")
 
-# Calculate distance of each street to the nearest bench
-street_distances = calculate_distances(streets_gdf, benches_gdf, location_name, benches_file=benches_file)
-
-progress_bar.progress(45)
-step_text.text("Filtering streets...")
-
-# Filter streets based on distance to benches
-streets_with_benches = street_distances[
-    street_distances["distance_to_bench"] <= 50 / 111320
-]  # 50 meters in degrees
+sidewalks_class = classify_sidewalks(sidewalks_gdf, benches_gdf, good_street_value, okay_street_value)
 
 progress_bar.progress(50)
-step_text.text("Drawing streets...")
+step_text.text("Drawing sidewalks...")
 
-total_streets = len(street_distances)
-for index, row in enumerate(street_distances.iterrows()):
-    if show_good_streets and row[1]["distance_to_bench"] <= good_street_value / 111320:
-        color = good_street_color
-    elif (
-        show_okay_streets and row[1]["distance_to_bench"] <= okay_street_value / 111320
-    ):
-        color = okay_street_color
-    elif show_bad_streets and row[1]["distance_to_bench"] > okay_street_value / 111320:
-        color = bad_street_color
-    else:
-        continue
-    line_points = [(lat, lon) for lon, lat in row[1].geometry.coords]
-    folium.PolyLine(
-        locations=line_points,
-        color=color,
-        weight=4,
-        tooltip=f"Distance to nearest bench: {round(row[1]['distance_to_bench']*111320, 2)} meters, type: {row[1]['highway']}",
-    ).add_to(m)
+for index, sidewalk in enumerate(sidewalks_class.iterrows()):
+    if sidewalk[1]["good"] and show_good_streets:
+        folium.GeoJson(
+            sidewalk[1].geometry,
+            style_function=lambda x: {
+                "color": good_street_color,
+                "weight": 5,
+                "opacity": 0.8,
+            },
+            tooltip=f"Benches: {len(sidewalk[1].benches)}",
+        ).add_to(m)
+    elif sidewalk[1]["okay"] and show_okay_streets:
+        folium.GeoJson(
+            sidewalk[1].geometry,
+            style_function=lambda x: {
+                "color": okay_street_color,
+                "weight": 5,
+                "opacity": 0.8,
+            },
+            tooltip=f"Benches: {len(sidewalk[1].benches)}",
+        ).add_to(m)
+    elif sidewalk[1]["bad"] and show_bad_streets:
+        folium.GeoJson(
+            sidewalk[1].geometry,
+            style_function=lambda x: {
+                "color": bad_street_color,
+                "weight": 5,
+                "opacity": 0.8,
+            },
+            tooltip=f"Benches: {len(sidewalk[1].benches)}",
+        ).add_to(m)
 
-    progress_bar.progress(0.5 + (index + 1) / total_streets / 2)
+    progress_bar.progress(0.5 + (index + 1) / len(sidewalks_gdf) / 2)
 
 # Reset progress bar
 progress_bar.empty()
