@@ -273,46 +273,46 @@ with st.sidebar:
         show_benches = st.checkbox("Show benches", value=True)
         st.write("\n")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        show_good_streets = st.checkbox("Show good streets", value=True)
-    with col2:
-        good_street_color = st.color_picker("Good street color", value="#009900")
-    col3, col4 = st.columns(2)
-    with col3:
-        show_okay_streets = st.checkbox("Show okay streets", value=True)
-    with col4:
-        okay_street_color = st.color_picker("Okay street color", value="#FFA500")
-    col5, col6 = st.columns(2)
-    with col5:
-        show_bad_streets = st.checkbox("Show bad streets", value=True)
-    with col6:
-        bad_street_color = st.color_picker("Bad street color", value="#FF0000")
-    col7, col8 = st.columns(2)
-    with col7:
-        good_street_value = st.slider(
-            "Good street distance", min_value=0, max_value=300, value=50
-        ) / 111320
-    with col8:
-        okay_street_value = st.slider(
-            "Okay street distance", min_value=0, max_value=300, value=150
-        ) / 111320
-    col9, col10 = st.columns(2)
-    with col9:
-        show_one_streets = st.checkbox("Show streets with 1 bench", value=True)
-    with col10:
-        one_street_color = st.color_picker("1 bench street color", value="#0000FF")
-    col11, col12 = st.columns(2)
-    with col11:
-        show_zero_streets = st.checkbox("Show streets with 0 benches", value=True)
-    with col12:
-        zero_street_color = st.color_picker("0 bench street color", value="#000000")
+        col1, col2 = st.columns(2)
+        with col1:
+            show_good_streets = st.checkbox("Show good streets", value=True)
+        with col2:
+            good_street_color = st.color_picker("Good street color", value="#009900")
+        col3, col4 = st.columns(2)
+        with col3:
+            show_okay_streets = st.checkbox("Show okay streets", value=True)
+        with col4:
+            okay_street_color = st.color_picker("Okay street color", value="#FFA500")
+        col5, col6 = st.columns(2)
+        with col5:
+            show_bad_streets = st.checkbox("Show bad streets", value=True)
+        with col6:
+            bad_street_color = st.color_picker("Bad street color", value="#FF0000")
+        col7, col8 = st.columns(2)
+        with col7:
+            good_street_value = st.slider(
+                "Good street distance", min_value=0, max_value=300, value=50
+            ) / 111320
+        with col8:
+            okay_street_value = st.slider(
+                "Okay street distance", min_value=0, max_value=300, value=150
+            ) / 111320
+        col9, col10 = st.columns(2)
+        with col9:
+            show_one_streets = st.checkbox("Show streets with 1 bench", value=True)
+        with col10:
+            one_street_color = st.color_picker("1 bench street color", value="#0000FF")
+        col11, col12 = st.columns(2)
+        with col11:
+            show_zero_streets = st.checkbox("Show streets with 0 benches", value=True)
+        with col12:
+            zero_street_color = st.color_picker("0 bench street color", value="#000000")
 
-    st.write("\n")
-    benches_file = st.file_uploader("Upload benches file", type=["csv", "xlsx"])
-    st.write(
-        "ℹ️ The file should contain `lon` and `lat` columns with coordinates of benches."
-    )
+        st.write("\n")
+        benches_file = st.file_uploader("Upload benches file", type=["csv", "xlsx"])
+        st.write(
+            "ℹ️ The file should contain `lon` and `lat` columns with coordinates of benches."
+        )
 
 # Heatmap
 if district_name == "":
