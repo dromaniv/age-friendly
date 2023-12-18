@@ -182,6 +182,17 @@ with st.sidebar:
         okay_street_value = st.slider(
             "Okay street distance", min_value=0, max_value=300, value=150
         ) / 111320
+    col9, col10 = st.columns(2)
+    with col9:
+        show_one_streets = st.checkbox("Show streets with 1 bench", value=True)
+    with col10:
+        one_street_color = st.color_picker("1 bench street color", value="#0000FF")
+    col11, col12 = st.columns(2)
+    with col11:
+        show_zero_streets = st.checkbox("Show streets with 0 benches", value=True)
+    with col12:
+        zero_street_color = st.color_picker("0 bench street color", value="#000000")
+
 
     st.write("\n")
     benches_file = st.file_uploader("Upload benches file", type=["csv", "xlsx"])
@@ -268,7 +279,7 @@ for index, sidewalk in enumerate(sidewalks_class.iterrows()):
             },
             tooltip=f"Benches: {len(sidewalk[1].benches)}",
         ).add_to(m)
-    elif sidewalk[1]["okay"] and show_okay_streets:
+    if sidewalk[1]["okay"] and show_okay_streets:
         folium.GeoJson(
             sidewalk[1].geometry,
             style_function=lambda x: {
@@ -278,7 +289,7 @@ for index, sidewalk in enumerate(sidewalks_class.iterrows()):
             },
             tooltip=f"Benches: {len(sidewalk[1].benches)}",
         ).add_to(m)
-    elif sidewalk[1]["bad"] and show_bad_streets:
+    if sidewalk[1]["bad"] and show_bad_streets:
         folium.GeoJson(
             sidewalk[1].geometry,
             style_function=lambda x: {
@@ -288,7 +299,26 @@ for index, sidewalk in enumerate(sidewalks_class.iterrows()):
             },
             tooltip=f"Benches: {len(sidewalk[1].benches)}",
         ).add_to(m)
-
+    if len(sidewalk[1].benches) == 1 and show_one_streets:
+        folium.GeoJson(
+            sidewalk[1].geometry,
+            style_function=lambda x: {
+                "color": one_street_color,
+                "weight": 5,
+                "opacity": 0.8,
+            },
+            tooltip=f"Benches: {len(sidewalk[1].benches)}",
+        ).add_to(m)
+    if len(sidewalk[1].benches) == 0 and show_zero_streets:
+        folium.GeoJson(
+            sidewalk[1].geometry,
+            style_function=lambda x: {
+                "color": zero_street_color,
+                "weight": 5,
+                "opacity": 0.8,
+            },
+            tooltip=f"Benches: {len(sidewalk[1].benches)}",
+        ).add_to(m)
     progress_bar.progress(0.5 + (index + 1) / len(sidewalks_gdf) / 2)
 
 # Reset progress bar
