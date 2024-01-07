@@ -51,7 +51,7 @@
                         $('.map').html(response.heatmap_html);
                     },
                     error: function(xhr, status, error) {
-                        $('.map').html('Error loading map');
+                        $('.map').html('There was an error while creating the heatmap.');
                         // Handle errors here
                         console.error(error);
                     }
@@ -68,7 +68,7 @@
                         $('.map').html(response.map_html);
                     },
                     error: function(xhr, status, error) {
-                        $('.map').html('Error loading heatmap');
+                        $('.map').html('There was an error while creating the map.');
                         // Handle errors here
                         console.error(error);
                     }

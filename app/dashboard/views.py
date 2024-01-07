@@ -76,7 +76,7 @@ def show_heatmap(request):
 
         # Check if valid
         if city is None:
-            return JsonResponse({"heatmap_html": "ERROR: City not specified!"})
+            return JsonResponse({"heatmap_html": "Error: Please select a city."})
 
         # Generate the heatmap
         heatmap = get_heatmap(city)
@@ -128,7 +128,7 @@ def show_map(request):
 
         # Check if valid
         if city is None or district is None:
-            return JsonResponse({"map_html": "ERROR: City or district not specified!"})
+            return JsonResponse({"map_html": "Error: City or district not specified."})
         
         map = get_map(
                 location_name = f"{city}, {district}",

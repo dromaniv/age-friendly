@@ -20,9 +20,9 @@ We're currently in the process of developing a program that will effectively add
 
 2. Install [pip](https://pip.pypa.io/en/stable/installation/)
 
-3. Run `pip install -r app/requirements.txt` in the root directory of the project
+3. Run `pip install -r app/requirements.txt` in the `app` directory of the project
 
-4. Run `python manage.py runserver` in the root directory of the project
+4. Run `python manage.py runserver` in the `app` directory of the project
 
 ## Usage
 
