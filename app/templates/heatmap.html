@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row h-100">
+            <div class="col-auto sidebar">
+                <!-- Form for selectors and inputs -->
+                <form id="map-form" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <!-- Form content with Bootstrap classes -->
+                    <!-- City Selector with Bootstrap classes -->
+                    <div class="form-group">
+                        <label for="city">City:</label>
+                        <select name="city" id="city" class="form-control">
+                            <option value="" selected disabled hidden>Select a city</option>
+                            <option value="Poznań">Poznań</option>
+                            <option value="Warszawa">Warszawa</option>
+                            <option value="Hasselt">Hasselt</option>
+                            <!-- Add more cities here -->
+                        </select>
+                    </div>
+
+                    <!-- Submit button with Bootstrap classes -->
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Show Map</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col map">
+                <!-- This is where the map will be displayed -->
+                {{ map_html | safe }}
+            </div>
+        </div>
+    </div>
+{% endblock %}

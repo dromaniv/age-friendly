@@ -22,11 +22,11 @@ We're currently in the process of developing a program that will effectively add
 
 3. Run `pip install -r app/requirements.txt` in the root directory of the project
 
-4. Run `streamlit run app/dashboard.py` in the root directory of the project
+4. Run `python manage.py runserver` in the root directory of the project
 
 ## Usage
 
-1. Open your browser and navigate to [localhost:8501](http://localhost:8501)
+1. Open your browser and navigate to [localhost:8000](http://localhost:8000/)
 2. Fill out the field with the city
 3. Fill out the street field or leave empty to show all streets
 4. _(Optional)_ Adjust the street length if the entire street is not highlighted
