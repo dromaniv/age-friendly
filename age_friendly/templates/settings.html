@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h1 class="h3 mb-0 text-center">Settings</h1>
+                    </div>
+                    <div class="card-body">
+                        <form id="settings-form" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <!-- Admin Level Dropdown -->
+                            <div class="mb-3">
+                                <label for="admin_level" class="form-label">Admin Level:</label>
+                                <select name="admin_level" id="admin_level" class="form-control">
+                                    <option value="1" {% if admin_level == 1 %}selected{% endif %}>1</option>
+                                    <option value="2" {% if admin_level == 2 %}selected{% endif %}>2</option>
+                                    <option value="3" {% if admin_level == 3 %}selected{% endif %}>3</option>
+                                    <option value="4" {% if admin_level == 4 %}selected{% endif %}>4</option>
+                                    <option value="5" {% if admin_level == 5 %}selected{% endif %}>5</option>
+                                    <option value="6" {% if admin_level == 6 %}selected{% endif %}>6</option>
+                                    <option value="7" {% if admin_level == 7 %}selected{% endif %}>7</option>
+                                    <option value="8" {% if admin_level == 8 %}selected{% endif %}>8</option>
+                                    <option value="9" {% if admin_level == 9 %}selected{% endif %}>9</option>
+                                    <option value="10" {% if admin_level == 10 %}selected{% endif %}>10</option>
+                                </select>
+                            </div>
+
+                            <!-- Heatmap File Upload -->
+                            <div class="mb-3">
+                                <label for="heatmap_file" class="form-label">Heatmap File:</label>
+                                <input type="file" name="heatmap_file" id="heatmap_file" class="form-control" accept=".csv, .xlsx">
+                                
+                                <!-- Display existing heatmap file -->
+                                {% if heatmap_file %}
+                                    <div class="mt-2">
+                                        <strong>Current Heatmap File:</strong>
+                                        <a href="{{ heatmap_file.url }}">{{ heatmap_file.name }}</a>
+                                    </div>
+                                {% else %}
+                                    <div class="mt-2">No heatmap file uploaded.</div>
+                                {% endif %}
+                            </div>
+
+
+                            <!-- Messages -->
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }}" role="alert">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <!-- Save button -->
+                            <div class="mb-3 text-center">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
