@@ -254,11 +254,7 @@ geolocator = Nominatim(user_agent="street-highlighter")
 
 # Sidebar for user input
 with st.sidebar:
-<<<<<<< HEAD
-    city = st.text_input("City name:", value="Hasselt")
-=======
-    city = st.selectbox("Select a city:", ["Poznań"])
->>>>>>> db039b06440748bbfba46716d86a6065c24bc210
+    city = st.selectbox("Select a city:", ["Poznań", "Hasselt", "Żnin"])
     districts = get_districts(city)
     district_name = st.selectbox(
         "Select a district:",
