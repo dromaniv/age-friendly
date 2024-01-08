@@ -13,14 +13,16 @@ from geopy.geocoders import Nominatim
 @st.cache_data
 def get_sidewalks(location_name):
     # Find streets inside the district
-    sidewalks_gdf = ox.features_from_place(location_name, tags={"highway": ["footway"]})
+    sidewalks_gdf = ox.features_from_place(location_name, tags={"highway": ["footway", "residential","tertiary", "unclassified", "secondary", "primary"]})
     # Data preprocessing:
     # Remove polygons
     sidewalks_gdf = sidewalks_gdf[sidewalks_gdf.geometry.type != "Polygon"]
     # Remove multipolygons
     sidewalks_gdf = sidewalks_gdf[sidewalks_gdf.geometry.type != "MultiPolygon"]
-    # Remove crossings
-    sidewalks_gdf = sidewalks_gdf[sidewalks_gdf["footway"] != "crossing"]
+    # Remove crossings only if there are footways in the street
+    if 'footway' in sidewalks_gdf.columns:
+        if sidewalks_gdf[sidewalks_gdf["footway"] == "crossing"].shape[0] > 0:
+            sidewalks_gdf = sidewalks_gdf[sidewalks_gdf["footway"] != "crossing"]
     # Calculate the length of each sidewalk
     sidewalks_gdf["length"] = sidewalks_gdf.geometry.length
     # Remove short sidewalks from the original GeoDataFrame
@@ -140,7 +142,7 @@ locale.setlocale(locale.LC_COLLATE, "pl_PL.UTF-8")
 
 # Sidebar for user input
 with st.sidebar:
-    city = st.text_input("City name:", value="Poznań")
+    city = st.text_input("City name:", value="Hasselt")
     districts = get_districts(city)
     district_name = st.selectbox(
         "Select a district:",
