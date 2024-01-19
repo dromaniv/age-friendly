@@ -41,46 +41,28 @@
                         <label class="form-check-label" for="show_good">Show Good Streets</label>
                     </div>
 
-                    <!-- Color Selector for Good Street -->
-                    <div class="form-group form-inline">
-                        <label for="good_color">Good Color:</label>
-                        <input type="color" class="form-control" id="good_color" name="good_color" value="#009900" style="width: 50px; margin-left: 10px;">
-                    </div>
-
                     <!-- Checkbox Selectors for Okay Street -->
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="show_okay" name="show_okay" checked>
                         <label class="form-check-label" for="show_okay">Show Okay Streets</label>
                     </div>
 
-                    <!-- Color Selector for Okay Street -->
-                    <div class="form-group form-inline">
-                        <label for="okay_color">Okay Color:</label>
-                        <input type="color" class="form-control" id="okay_color" name="okay_color" value="#FFA500" style="width: 50px; margin-left: 10px;">
-                    </div>
-
                     <!-- Checkbox Selectors for Bad Street -->
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="show_bad" name="show_bad" checked>
-                        <label class="form-check-label" for="show_bad">Show Okay Streets</label>
+                        <label class="form-check-label" for="show_bad">Show Bad Streets</label>
                     </div>
 
-                    <!-- Color Selector for Bad Street -->
-                    <div class="form-group form-inline">
-                        <label for="bad_color">Bad Color:</label>
-                        <input type="color" class="form-control" id="bad_color" name="bad_color" value="#ff0000" style="width: 50px; margin-left: 10px;">
+                    <!-- Checkbox Selectors for One Street -->
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="show_one" name="show_one" checked>
+                        <label class="form-check-label" for="show_one">Show Single Streets</label>
                     </div>
 
                     <!-- Checkbox Selectors for Empty Street -->
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="show_empty" name="show_empty" checked>
                         <label class="form-check-label" for="show_empty">Show Empty Streets</label>
-                    </div>
-
-                    <!-- Color Selector for Empty Street -->
-                    <div class="form-group form-inline">
-                        <label for="empty_color">Empty Color:</label>
-                        <input type="color" class="form-control" id="empty_color" name="empty_color" value="#000000" style="width: 50px; margin-left: 10px;">
                     </div>
 
                     <!-- Slider for Good Distance -->
@@ -114,11 +96,45 @@
                         });
                     </script>
 
-                    <!-- File for Benches -->
-                    <div class="form-group">
-                        <label for="benches_file">Benches File:</label>
-                        <input type="file" class="form-control-file" id="benches_file" name="benches_file" accept=".csv,.xlsx">
+                    <!-- Simulation checkbox -->
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="simulation" name="simulation">
+                        <label class="form-check-label" for="simulation">Simulation</label>
                     </div>
+                    
+                    <!-- Budget input form -->
+                    <div class="form-group" id="budget_form" style="display: none;">
+                        <label for="budget">Budget:</label>
+                        <input type="number" class="form-control" id="budget" name="budget">
+                    </div>
+
+                    <!-- Bench Cost input form -->
+                    <div class="form-group" id="bench_cost_form" style="display: none;">
+                        <label for="bench_cost">Bench Cost:</label>
+                        <input type="number" class="form-control" id="bench_cost" name="bench_cost">
+                    </div>
+
+                    <script>
+                        // Get the simulation checkbox
+                        const simulationCheckbox = document.getElementById('simulation');
+
+                        // Get the budget form
+                        const budgetForm = document.getElementById('budget_form');
+
+                        // Get the bench cost form
+                        const benchCostForm = document.getElementById('bench_cost_form');
+
+                        // Show or hide the budget and bench cost forms when the simulation checkbox is checked or unchecked
+                        simulationCheckbox.addEventListener('change', function() {
+                            if (simulationCheckbox.checked) {
+                                budgetForm.style.display = 'block';
+                                benchCostForm.style.display = 'block';
+                            } else {
+                                budgetForm.style.display = 'none';
+                                benchCostForm.style.display = 'none';
+                            }
+                        });
+                    </script>
 
                     <!-- Submit button with Bootstrap classes -->
                     <div class="btn-group" role="group">

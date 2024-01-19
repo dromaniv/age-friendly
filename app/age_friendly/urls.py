@@ -20,12 +20,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', views.index, name='home'),
-    path('show_heatmap/', views.show_heatmap, name='show_heatmap'),
-    path('settings/', views.settings, name='settings'),
-    path('login', views.login_view, name='login'),
-    path('logout', views.logout_view, name='logout'),
-    path('show_map/', views.show_map, name='show_map'),
-    path('get_districts/', views.get_districts, name='get_districts'),
+    path("admin/", admin.site.urls),
+    path("", views.index, name="home"),
+    path("show_heatmap/", views.show_heatmap, name="show_heatmap"),
+    path("settings/", views.settings_view, name="settings"),
+    path("login", views.login_view, name="login"),
+    path("logout", views.logout_view, name="logout"),
+    path("show_map/", views.show_map, name="show_map"),
+    path("get_districts/", views.get_districts, name="get_districts"),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -4,19 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('dashboard', '0001_initial'),
+        ("dashboard", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='appsettings',
-            options={'verbose_name_plural': 'App Settings'},
+            name="appsettings",
+            options={"verbose_name_plural": "App Settings"},
         ),
         migrations.AddField(
-            model_name='appsettings',
-            name='heatmap_file',
-            field=models.FileField(blank=True, null=True, upload_to='osm/'),
+            model_name="appsettings",
+            name="heatmap_file",
+            field=models.FileField(blank=True, null=True, upload_to="osm/"),
         ),
     ]

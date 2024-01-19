@@ -39,12 +39,70 @@
                                 <!-- Display existing heatmap file -->
                                 {% if heatmap_file %}
                                     <div class="mt-2">
-                                        <strong>Current Heatmap File:</strong>
-                                        <a href="{{ heatmap_file.url }}">{{ heatmap_file.name }}</a>
+                                        <strong>Current heatmap file:</strong>
+                                        <a href="{{ heatmap_file_url }}">{{ heatmap_file_name }}</a>
                                     </div>
                                 {% else %}
                                     <div class="mt-2">No heatmap file uploaded.</div>
                                 {% endif %}
+                            </div>
+
+                            <!-- Delete Heatmap File -->
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="delete_heatmap" name="delete_heatmap">
+                                <label class="form-check-label" for="delete_heatmap">Delete heatmap file?</label>
+                            </div>
+
+                            <!-- Bench File Upload -->
+                            <div class="mb-3">
+                                <label for="benches_file" class="form-label">Benches File:</label>
+                                <input type="file" name="benches_file" id="benches_file" class="form-control" accept=".csv, .xlsx">
+                                
+                                <!-- Display existing heatmap file -->
+                                {% if benches_file %}
+                                    <div class="mt-2">
+                                        <strong>Current benches file:</strong>
+                                        <a href="{{ benches_file_url }}">{{ benches_file_name }}</a>
+                                    </div>
+                                {% else %}
+                                    <div class="mt-2">No benches file uploaded.</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Delete Bench File -->
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="delete_benches" name="delete_benches">
+                                <label class="form-check-label" for="delete_benches">Delete benches file?</label>
+                            </div>
+
+                            <!-- Color Selector for Good Street -->
+                            <div class="form-group form-inline">
+                                <label for="good_color">Good street color:</label>
+                                <input type="color" class="form-control" id="good_color" name="good_color" value="{{ good_color }}" style="width: 50px; margin-left: 10px;">
+                            </div>
+
+                            <!-- Color Selector for Okay Street -->
+                            <div class="form-group form-inline">
+                                <label for="okay_color">Okay street color:</label>
+                                <input type="color" class="form-control" id="okay_color" name="okay_color" value="{{ okay_color }}" style="width: 50px; margin-left: 10px;">
+                            </div>
+
+                            <!-- Color Selector for Bad Street -->
+                            <div class="form-group form-inline">
+                                <label for="bad_color">Bad street color:</label>
+                                <input type="color" class="form-control" id="bad_color" name="bad_color" value="{{ bad_color }}" style="width: 50px; margin-left: 10px;">
+                            </div>
+
+                            <!-- Color Selector for One Street -->
+                            <div class="form-group form-inline">
+                                <label for="one_color">Single street color:</label>
+                                <input type="color" class="form-control" id="one_color" name="one_color" value="{{ one_color }}" style="width: 50px; margin-left: 10px;">
+                            </div>
+
+                            <!-- Color Selector for Empty Street -->
+                            <div class="form-group form-inline">
+                                <label for="empty_color">Empty street color:</label>
+                                <input type="color" class="form-control" id="empty_color" name="empty_color" value="{{ empty_color }}" style="width: 50px; margin-left: 10px;">
                             </div>
 
 
