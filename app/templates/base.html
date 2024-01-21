@@ -32,7 +32,7 @@
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}'); // Add CSRF token
 
             $('.map').html(`
-                <div class="d-flex align-items-center" style="margin-top: 10px;">
+                <div class="d-flex align-items-center" style="margin-top: 10px; margin-left: 10px;">
                     <div class="spinner-border ms-auto" role="status" aria-hidden="true" style="margin-right: 10px;"></div>
                     <strong>Loading ${isHeatmap ? 'heatmap' : 'map'}...</strong>
                 </div>
@@ -76,6 +76,13 @@
             }
         }
 
+        function toggleSidebar() {
+            $('.sidebar').toggleClass('collapsed');
+            $('.map').toggleClass('collapsed');
+            // show the reveal button if the sidebar is collapsed
+            $('.reveal-btn').toggle($('.sidebar').hasClass('collapsed'));
+        }
+        
         $(document).ready(function() {
             $('#city').change(updateDistricts);
             $('#show_map_btn').click(function(event) { submitForm(event, false); }); // Bind the map button click handler
@@ -88,23 +95,55 @@
     <style>
         .container-fluid {
             height: calc(100vh - 56px); /* Full viewport height minus the navbar height */
-            overflow: hidden; /* Hide the scrollbars */
+            margin-top: 56px;
         }
 
         .sidebar {
             background-color: #f8f9fa; /* A light grey background */
-            height: calc(100vh - 56px); /* Full viewport height minus the navbar height */
-            width: 15%; /* Sidebar width */
+            width: 300px; /* Sidebar width */
             padding: 20px;
-            overflow-y: auto; /* Scroll for overflow */
-            /* make it resizible to the right */
-            resize: horizontal;
+            overflow-y: auto;
         }
 
         .map {
-            flex-grow: 1;
+            /* position it next to the sidebar */
+            position: absolute;
+            left: 300px;
+            top: 56px;
+            right: 0;
+            bottom: 0;
+            flex-grow: 1; /* Fill the remaining space */
         }
 
+        .map.collapsed {
+            /* position it next to the sidebar */
+            position: absolute;
+            left: 0;
+            top: 56px;
+            right: 0;
+            bottom: 0;
+            flex-grow: 1; /* Fill the remaining space */
+        }
+
+        .collapse-btn {
+            position: absolute;
+            top: 0;
+            left: 85%;
+            z-index: 1;
+        }
+
+        .reveal-btn {
+            position: fixed;
+            top: 7%;
+            left: 10px;
+            z-index: 1;
+            display: none;
+        }
+
+        /* Add a class for the collapsed state */
+        .sidebar.collapsed {
+            display: none;
+        }
         /* Additional custom styles can go here */
     </style>
     <!-- Include jQuery for simplicity (optional, you can use vanilla JS as well) -->

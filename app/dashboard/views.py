@@ -206,4 +206,4 @@ def show_map(request):
             bench_cost=request.POST.get("bench_cost", None),
         )
 
-        return JsonResponse({"map_html": map._repr_html_()})
+        return JsonResponse({"map_html": map})

@@ -324,7 +324,7 @@ def calculate_single_street_friendliness(sidewalk):
         return 0
 
 
-def display_basic_statistics(sidewalks_gdf):
+def get_basic_statistics(sidewalks_gdf):
     good_streets = sidewalks_gdf[sidewalks_gdf["good"]]
     okay_streets = sidewalks_gdf[sidewalks_gdf["okay"]]
     bad_streets = sidewalks_gdf[sidewalks_gdf["bad"]]
@@ -388,12 +388,7 @@ def display_basic_statistics(sidewalks_gdf):
             ],
         }
     )
-
-    # Display the tables
-    print("Street Statistics:")
-    print(street_stats)
-    print("\nGeneral Statistics:")
-    print(general_stats)
+    return street_stats, general_stats
 
 
 def get_map(
@@ -467,9 +462,15 @@ def get_map(
         "zero_street_color": app_settings.empty_color,
     }
 
-    m = draw_sidewalks(m, sidewalks_gdf, show_options, colors)
+    m = draw_sidewalks(m, sidewalks_gdf, show_options, colors)._repr_html_()
 
-    display_basic_statistics(sidewalks_gdf)
+    # Calculate statistics
+    street_stats, general_stats = get_basic_statistics(sidewalks_gdf)
+
+    # Add statistics as HTML
+    m += "<br><br>"
+    m += street_stats.to_html(classes="table table-striped table-hover")
+    m += general_stats.to_html(classes="table table-striped table-hover")
 
     return m
 

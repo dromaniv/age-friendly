@@ -2,22 +2,25 @@
 
 {% block content %}
     <div class="container-fluid">
+        <!-- Right arrow button to reveal the sidebar -->
+        <button type="button" class="btn btn-primary reveal-btn" onclick="toggleSidebar();">
+            <span aria-hidden="true">&rarr;</span>
+        </button>
         <div class="row h-100">
-            <div class="col-auto sidebar">
+            <div class="col-auto sidebar position-fixed h-100">
                 <!-- Form for selectors and inputs -->
                 <form id="map-form" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
+                    <!-- Left arrow button to hide the sidebar -->
+                    <button type="button" class="btn btn-group collapse-btn" onclick="toggleSidebar();">
+                        <span aria-hidden="true">&larr;</span>
+                    </button>
+
                     <!-- Form content with Bootstrap classes -->
-                    <!-- City Selector with Bootstrap classes -->
+                    <!-- City input with Bootstrap classes -->
                     <div class="form-group">
                         <label for="city">City:</label>
-                        <select name="city" id="city" class="form-control">
-                            <option value="" selected disabled hidden>Select a city</option>
-                            <option value="Poznań">Poznań</option>
-                            <option value="Warszawa">Warszawa</option>
-                            <option value="Hasselt">Hasselt</option>
-                            <!-- Add more cities here -->
-                        </select>
+                        <input type="text" class="form-control" id="city" name="city" placeholder=" Enter a city">
                     </div>
 
                     <!-- District Selector with Bootstrap classes -->
@@ -29,53 +32,62 @@
                         </select>
                     </div>                    
 
+                    <!-- Map options text -->
+                    <div class="form-label">
+                        <label for="map_options">Map options:</label>
+                    </div>
+
                     <!-- Checkbox for benches with Bootstrap classes -->
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="show_benches" name="show_benches" checked>
-                        <label class="form-check-label" for="show_benches">Show Benches</label>
+                        <label class="form-check-label" for="show_benches">Show benches</label>
                     </div>
 
                     <!-- Checkbox Selectors for Good Street -->
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="show_good" name="show_good" checked>
-                        <label class="form-check-label" for="show_good">Show Good Streets</label>
+                        <label class="form-check-label" for="show_good">Show "Good" streets</label>
                     </div>
 
                     <!-- Checkbox Selectors for Okay Street -->
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="show_okay" name="show_okay" checked>
-                        <label class="form-check-label" for="show_okay">Show Okay Streets</label>
+                        <label class="form-check-label" for="show_okay">Show "Okay" streets</label>
                     </div>
 
                     <!-- Checkbox Selectors for Bad Street -->
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="show_bad" name="show_bad" checked>
-                        <label class="form-check-label" for="show_bad">Show Bad Streets</label>
+                        <label class="form-check-label" for="show_bad">Show "Bad" streets</label>
                     </div>
 
                     <!-- Checkbox Selectors for One Street -->
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="show_one" name="show_one" checked>
-                        <label class="form-check-label" for="show_one">Show Single Streets</label>
+                        <label class="form-check-label" for="show_one">Show streets with one bench</label>
                     </div>
 
                     <!-- Checkbox Selectors for Empty Street -->
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="show_empty" name="show_empty" checked>
-                        <label class="form-check-label" for="show_empty">Show Empty Streets</label>
+                        <label class="form-check-label" for="show_empty">Show streets with no benches</label>
                     </div>
+
+                    <br>
 
                     <!-- Slider for Good Distance -->
                     <div class="form-group">
-                        <label for="good_distance">Good Distance:</label><span id="good_distance_value"><b> 50 m </b></span>
+                        <label for="good_distance">"Good" distance between benches:</label><span id="good_distance_value"><b> 50 m </b></span>
                         <input type="range" class="form-control-range" id="good_distance" name="good_distance" min="0" max="300" value="50">
                     </div>
 
                     <!-- Slider for Okay Distance -->
                     <div class="form-group">
-                        <label for="okay_distance">Okay Distance:</label><span id="okay_distance_value"><b> 150 m </b></span>
+                        <label for="okay_distance">"Okay" distance between benches:</label><span id="okay_distance_value"><b> 150 m </b></span>
                         <input type="range" class="form-control-range" id="okay_distance" name="okay_distance" min="0" max="300" value="150">
                     </div>
+
+                    <br>
 
                     <script>
                         // Get the slider elements
@@ -97,9 +109,9 @@
                     </script>
 
                     <!-- Simulation checkbox -->
-                    <div class="form-check mb-3">
+                    <div class="form-check">
                         <input type="checkbox" class="form-check-input" id="simulation" name="simulation">
-                        <label class="form-check-label" for="simulation">Simulation</label>
+                        <label class="form-check-label" for="simulation">Budgeting simulation</label>
                     </div>
                     
                     <!-- Budget input form -->
@@ -113,6 +125,8 @@
                         <label for="bench_cost">Bench Cost:</label>
                         <input type="number" class="form-control" id="bench_cost" name="bench_cost">
                     </div>
+
+                    <br>
 
                     <script>
                         // Get the simulation checkbox
@@ -137,15 +151,26 @@
                     </script>
 
                     <!-- Submit button with Bootstrap classes -->
-                    <div class="btn-group" role="group">
+                    <div class="text-center">
                         <button type="submit" class="btn btn-primary" id="show_map_btn">Show Map</button>
                         <button type="submit" class="btn btn-secondary" id="show_heatmap_btn">Show Heatmap</button>
                     </div>
+
+                    <br>
                 </form>
             </div>
-            <div class="col map">
+            <div class="map">
                 <!-- This is where the map will be displayed -->
-                {{ map_html | safe }}
+                {% if map_html %}
+                    {{ map_html | safe }}
+                {% else %}
+                    <div class="d-flex align-items-center" style="margin-top: 10px; margin-left: 10px;">
+                        <strong>To view the heatmap, make sure you have uploaded the population file in the settings and selected the appropriate city.
+                            <br>Then, click on the "Show Heatmap" button.
+                        <br><br>To view the bench map, select the city and district you want to view. <i>You can upload an optional file with bench coordinates in the settings.</i>
+                            <br>Then, click on the "Show Map" button.
+                            <br>If viewing the normal map, scroll down to find the statistics about the selected district.</strong>                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
