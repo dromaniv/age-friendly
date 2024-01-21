@@ -130,7 +130,7 @@ def draw_benches(map_object, benches_gdf):
             icon_size=(15, 15),
         )
         bench_coords = bench[1].geometry.centroid.coords[0]
-        tooltip = "Imported bench" if bench[1]["amenity"] != "bench" else None
+        tooltip = "Imported/simulated bench" if bench[1]["amenity"] != "bench" else None
         folium.Marker(
             location=[bench_coords[1], bench_coords[0]], icon=icon, tooltip=tooltip
         ).add_to(map_object)
