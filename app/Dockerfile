@@ -17,8 +17,8 @@ ENV LC_ALL pl_PL.UTF-8
 ENV LANG pl_PL.UTF-8
 ENV LANGUAGE pl_PL.UTF-8
 
-# Make port 8501 available to the world outside this container
-EXPOSE 8501
+# Make port 8000 available to the world outside this container
+EXPOSE 8000
 
-# Define the command to run your Streamlit app
-CMD ["streamlit", "run", "dashboard.py"]
+# Define the command to run your Django app
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
