@@ -12,7 +12,7 @@ We're currently in the process of developing a program that will effectively add
 
 2. Run `docker build -t age-friendly app` in the root directory of the project
 
-3. Run `docker run -p 8501:8501 --rm age-friendly` in the root directory of the project
+3. Run `docker run -p 8000:8000 --rm age-friendly` in the root directory of the project
 
 ### Without Docker:
 
