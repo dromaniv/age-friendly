@@ -20,7 +20,7 @@ We're currently in the process of developing a program that will effectively add
 
 2. Install [pip](https://pip.pypa.io/en/stable/installation/)
 
-zIn the `app` directory of the project:
+In the `app` directory of the project:
 
 3. Run `pip install -r app/requirements.txt`
 
