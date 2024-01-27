@@ -20,5 +20,12 @@ ENV LANGUAGE pl_PL.UTF-8
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
 
-# Define the command to run your Django app
+# Run django migrations
+RUN python manage.py makemigrations
+RUN python manage.py migrate
+
+# Create superuser
+RUN echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'admin')" | python manage.py shell
+
+# Run server when the container launches
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
