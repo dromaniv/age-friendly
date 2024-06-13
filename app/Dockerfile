@@ -27,5 +27,8 @@ RUN python manage.py migrate
 # Create superuser
 RUN echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'admin')" | python manage.py shell
 
+# Create AppSettings
+RUN echo "from dashboard.models import AppSettings; from django.contrib.auth.models import User; AppSettings.objects.create(user=User.objects.get(username='admin'))" | python manage.py shell
+
 # Run server when the container launches
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

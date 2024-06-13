@@ -17,7 +17,7 @@ class AppSettings(models.Model):
     admin_level = models.IntegerField(default=9)
 
     heatmap_file = models.FileField(
-        upload_to=settings.STATICFILES_DIRS[0], null=True, blank=True
+        upload_to=settings.STATICFILES_DIRS[0], null=True, blank=True, default="heatmap.xlsx"
     )
 
     benches_file = models.FileField(
