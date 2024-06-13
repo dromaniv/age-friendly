@@ -33,6 +33,7 @@ In the `app` directory of the project:
 ## Usage
 
 1. Open your browser and navigate to [localhost:8000](http://localhost:8000/)
+    > Login with username `admin` and password `admin`
 2. Fill out the field with the city
 3. Fill out the street field or leave empty to show all streets
 4. _(Optional)_ Adjust the street length if the entire street is not highlighted
