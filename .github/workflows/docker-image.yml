@@ -15,5 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: ls ./app/
-
+      run: docker build ./app/ --tag age-friendly:$(date +%s)
