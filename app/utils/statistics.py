@@ -17,14 +17,34 @@ def parse_multilinestring(multilinestring_str):
     # Remove the 'MultiLineString ((' and '))' from the string
     multilinestring_str = multilinestring_str.replace('MultiLineString ((', '').replace('))', '')
     linestrings = multilinestring_str.split('), (')
-    line_coords = [
-        [tuple(map(float, coord.split())) for coord in line.split(', ')]
-        for line in linestrings
-    ]
-    return MultiLineString([LineString(coords) for coords in line_coords])
+    line_coords = []
+    for line in linestrings:
+        coords = []
+        for coord in line.split(', '):
+            try:
+                # Split coordinate into x and y
+                x_str, y_str = coord.strip().split()
+                x = float(x_str)
+                y = float(y_str)
+                coords.append((x, y))
+            except ValueError:
+                # Skip invalid coordinate pairs
+                continue
+        # Only add lines with at least two valid coordinates
+        if len(coords) >= 2:
+            line_coords.append(coords)
+    # Check if we have at least one valid linestring
+    if line_coords:
+        try:
+            return MultiLineString([LineString(coords) for coords in line_coords])
+        except ValueError as e:
+            print(f"Error creating MultiLineString: {e}")
+            return None
+    else:
+        return None  # Return None if no valid lines found
 
-def get_basic_statistics(sidewalks_gdf, district):
 
+def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
     # Reproject to a suitable projected CRS for accurate length and area calculations
     sidewalks_gdf = sidewalks_gdf.to_crs(epsg=3857)
     district = district.to_crs(epsg=3857)
@@ -56,31 +76,36 @@ def get_basic_statistics(sidewalks_gdf, district):
     ).sum() * 100
 
     number_of_street_segments = len(sidewalks_gdf)
+    
+    if not heatmap_file:
+        density = 0
+    else:
+        # Load density information from the static file
+        density_df = pd.read_excel(heatmap_file)
 
-    # Load density information from the static file
-    density_file_path = os.path.join(settings.STATICFILES_DIRS[0], 'heatmap.xlsx')
-    density_df = pd.read_excel(density_file_path)
+        # Ensure the density_df has the correct columns
+        if not {'OBJECTID', 'LICZBA', 'boundaries'}.issubset(density_df.columns):
+            raise KeyError("The 'heatmap.xlsx' file is missing required columns: 'OBJECTID', 'LICZBA', 'boundaries'.")
 
-    print("Columns in density_df:", density_df.columns)
+        # Create geometries from the 'boundaries' column
+        density_df['geometry'] = density_df['boundaries'].apply(parse_multilinestring)
+        density_gdf = gpd.GeoDataFrame(density_df, geometry='geometry', crs='EPSG:4326')
 
-    # Ensure the density_df has the correct columns
-    if not {'OBJECTID', 'LICZBA', 'boundaries'}.issubset(density_df.columns):
-        raise KeyError("The 'heatmap.xlsx' file is missing required columns: 'OBJECTID', 'LICZBA', 'boundaries'.")
+        # Reproject to match the district CRS
+        density_gdf = density_gdf.to_crs(epsg=3857)
 
-    # Create geometries from the 'boundaries' column
-    density_df['geometry'] = density_df['boundaries'].apply(parse_multilinestring)
-    density_gdf = gpd.GeoDataFrame(density_df, geometry='geometry', crs='EPSG:4326')
+        # Calculate total seniors within the district
+        district_seniors = density_gdf[density_gdf.within(district.geometry.iloc[0])]
+        total_seniors = district_seniors['LICZBA'].sum()
 
-    # Reproject to match the district CRS
-    density_gdf = density_gdf.to_crs(epsg=3857)
+        # Calculate total area of the district in square meters
+        total_area = district.geometry.area.sum()  # in square meters
 
-    # Calculate total seniors within the district
-    district_seniors = density_gdf[density_gdf.within(district.geometry.iloc[0])]
-    total_seniors = district_seniors['Liczba'].sum()
+        # Convert total area to square kilometers
+        total_area_km2 = total_area / 1e6  # Convert area to km²
 
-    # Calculate total area of the district
-    total_area = district.geometry.area.sum()  # in square meters
-    density = total_seniors / total_area if total_area > 0 else 0
+        # Calculate density in seniors per km²
+        density = total_seniors / total_area_km2 if total_area_km2 > 0 else 0
 
     # Creating DataFrames for the tables
     street_stats = pd.DataFrame(
@@ -112,14 +137,14 @@ def get_basic_statistics(sidewalks_gdf, district):
                 "Current Benches",
                 "Overall Friendliness",
                 "Number of Street Segments",
-                "Density (seniors/m²)",
+                "Density (seniors/km²)",
             ],
             "Value": [
                 f"{total_length:.2f}",
                 f"{current_benches}",
                 f"{overall_friendliness:.2f}%",
                 f"{number_of_street_segments}",
-                f"{density:.6f}",
+                f"{density:.2f}",
             ],
         }
     )
