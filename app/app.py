@@ -1,6 +1,5 @@
 import os
 import folium
-import locale
 import requests
 import osmnx as ox
 import pandas as pd
@@ -23,8 +22,7 @@ from streamlit_folium import st_folium
 # Set page configuration
 st.set_page_config(layout="wide", page_title="Age Friendly", page_icon="🗺️")
 
-# Set locale for sorting
-locale.setlocale(locale.LC_COLLATE, "pl_PL.UTF-8")
+
 geolocator = Nominatim(user_agent="street-highlighter")
 
 # Initialize session state for simulation status
@@ -142,7 +140,7 @@ def get_districts(city_name, admin_level=9):
     ]
 
     # Sort districts alphabetically
-    districts.sort(key=locale.strxfrm)
+    districts.sort()
 
     return districts
 
