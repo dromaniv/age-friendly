@@ -21,7 +21,7 @@ from utils.classification import classify_sidewalks
 from streamlit_folium import st_folium
 
 # Set page configuration
-st.set_page_config(layout="wide", page_title="Street Highlighter", page_icon="🗺️")
+st.set_page_config(layout="wide", page_title="Age Friendly", page_icon="🗺️")
 
 # Set locale for sorting
 locale.setlocale(locale.LC_COLLATE, "pl_PL.UTF-8")
