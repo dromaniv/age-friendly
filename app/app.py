@@ -310,9 +310,9 @@ with st.sidebar:
     admin_level = st.slider(
         "Admin Level",
         min_value=7,
-        max_value=10,
+        max_value=11,
         value=9,
-        help="Select the administrative level for what constitutes a district.",
+        help="Select the administrative level for what constitutes a district. Lower values are more general (e.g. city), higher values are more specific (e.g. neighborhood).",
     )
     city = st.text_input("City:", value="Poznań", help="ℹEnter the name of the city.")
     districts = get_districts(city, admin_level)
