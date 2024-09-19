@@ -309,7 +309,7 @@ def draw_and_simulate_map(
 with st.sidebar:
     admin_level = st.slider(
         "Admin Level",
-        min_value=1,
+        min_value=7,
         max_value=10,
         value=9,
         help="Select the administrative level for what constitutes a district.",
