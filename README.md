@@ -22,7 +22,7 @@ We're currently in the process of developing a program that will effectively add
 
    In the `app` directory of the project:
 
-3. Run `pip install -r app/requirements.txt`
+3. Run `pip install -r requirements.txt`
 
 4. Run the Streamlit app with `streamlit run app.py`.
 
