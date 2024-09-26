@@ -5,6 +5,7 @@ import os
 from django.conf import settings
 from shapely.geometry import MultiLineString, LineString
 
+
 def calculate_single_street_friendliness(sidewalk):
     current_benches = len(sidewalk["benches"])
     needed_benches = sidewalk["benches_to_good"]
@@ -13,14 +14,17 @@ def calculate_single_street_friendliness(sidewalk):
     else:
         return 0
 
+
 def parse_multilinestring(multilinestring_str):
     # Remove the 'MultiLineString ((' and '))' from the string
-    multilinestring_str = multilinestring_str.replace('MultiLineString ((', '').replace('))', '')
-    linestrings = multilinestring_str.split('), (')
+    multilinestring_str = multilinestring_str.replace("MultiLineString ((", "").replace(
+        "))", ""
+    )
+    linestrings = multilinestring_str.split("), (")
     line_coords = []
     for line in linestrings:
         coords = []
-        for coord in line.split(', '):
+        for coord in line.split(", "):
             try:
                 # Split coordinate into x and y
                 x_str, y_str = coord.strip().split()
@@ -48,7 +52,7 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
     # Reproject to a suitable projected CRS for accurate length and area calculations
     sidewalks_gdf = sidewalks_gdf.to_crs(epsg=3857)
     district = district.to_crs(epsg=3857)
-    
+
     good_streets = sidewalks_gdf[sidewalks_gdf["good"]]
     okay_streets = sidewalks_gdf[sidewalks_gdf["okay"]]
     bad_streets = sidewalks_gdf[sidewalks_gdf["bad"]]
@@ -76,7 +80,7 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
     ).sum() * 100
 
     number_of_street_segments = len(sidewalks_gdf)
-    
+
     if not heatmap_file:
         density = 0
     else:
@@ -84,19 +88,21 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
         density_df = pd.read_excel(heatmap_file)
 
         # Ensure the density_df has the correct columns
-        if not {'OBJECTID', 'LICZBA', 'boundaries'}.issubset(density_df.columns):
-            raise KeyError("The 'heatmap.xlsx' file is missing required columns: 'OBJECTID', 'LICZBA', 'boundaries'.")
+        if not {"OBJECTID", "LICZBA", "boundaries"}.issubset(density_df.columns):
+            raise KeyError(
+                "The 'heatmap.xlsx' file is missing required columns: 'OBJECTID', 'LICZBA', 'boundaries'."
+            )
 
         # Create geometries from the 'boundaries' column
-        density_df['geometry'] = density_df['boundaries'].apply(parse_multilinestring)
-        density_gdf = gpd.GeoDataFrame(density_df, geometry='geometry', crs='EPSG:4326')
+        density_df["geometry"] = density_df["boundaries"].apply(parse_multilinestring)
+        density_gdf = gpd.GeoDataFrame(density_df, geometry="geometry", crs="EPSG:4326")
 
         # Reproject to match the district CRS
         density_gdf = density_gdf.to_crs(epsg=3857)
 
         # Calculate total seniors within the district
         district_seniors = density_gdf[density_gdf.within(district.geometry.iloc[0])]
-        total_seniors = district_seniors['LICZBA'].sum()
+        total_seniors = district_seniors["LICZBA"].sum()
 
         # Calculate total area of the district in square meters
         total_area = district.geometry.area.sum()  # in square meters

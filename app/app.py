@@ -370,14 +370,18 @@ with st.sidebar:
                 show_good_streets = st.checkbox("Age-friendly (optimal)", value=True)
             with col2:
                 good_street_color = st.color_picker(
-                    "Optimal street color", value="#24693D", label_visibility="collapsed"
+                    "Optimal street color",
+                    value="#24693D",
+                    label_visibility="collapsed",
                 )
             col3, col4 = st.columns(2)
             with col3:
                 show_okay_streets = st.checkbox("Age-friendly (convenient)", value=True)
             with col4:
                 okay_street_color = st.color_picker(
-                    "Convenient street color", value="#6DB463", label_visibility="collapsed"
+                    "Convenient street color",
+                    value="#6DB463",
+                    label_visibility="collapsed",
                 )
             col5, col6 = st.columns(2)
             with col5:
@@ -386,7 +390,9 @@ with st.sidebar:
                 )
             with col6:
                 bad_street_color = st.color_picker(
-                    "Moderate street color", value="#F57965", label_visibility="collapsed"
+                    "Moderate street color",
+                    value="#F57965",
+                    label_visibility="collapsed",
                 )
             col9, col10 = st.columns(2)
             with col9:
@@ -395,23 +401,23 @@ with st.sidebar:
                 )
             with col10:
                 one_street_color = st.color_picker(
-                    "Minimal street color", value="#E64E4B", label_visibility="collapsed"
+                    "Minimal street color",
+                    value="#E64E4B",
+                    label_visibility="collapsed",
                 )
             col11, col12 = st.columns(2)
             with col11:
-                show_zero_streets = st.checkbox(
-                    "Non-age-friendly", value=True
-                )
+                show_zero_streets = st.checkbox("Non-age-friendly", value=True)
             with col12:
                 zero_street_color = st.color_picker(
-                    "Non-age-friendly color", value="#A3123A", label_visibility="collapsed"
+                    "Non-age-friendly color",
+                    value="#A3123A",
+                    label_visibility="collapsed",
                 )
             col7, col8 = st.columns(2)
             with col7:
                 good_street_value = (
-                    st.slider(
-                        "Optimal distance", min_value=0, max_value=300, value=50
-                    )
+                    st.slider("Optimal distance", min_value=0, max_value=300, value=50)
                     / 111320
                 )
             with col8:

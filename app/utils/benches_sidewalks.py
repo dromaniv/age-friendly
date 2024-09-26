@@ -6,8 +6,10 @@ from shapely.geometry import Point
 
 geolocator = Nominatim(user_agent="age_friendly")
 
+
 def get_location(location_name):
     return geolocator.geocode(location_name)
+
 
 def get_sidewalks(location_name):
     # Find streets inside the district
@@ -26,6 +28,7 @@ def get_sidewalks(location_name):
     # Remove short sidewalks from the original GeoDataFrame
     sidewalks_gdf = sidewalks_gdf[sidewalks_gdf["length"] >= 0.0005]
     return sidewalks_gdf
+
 
 def get_benches(location_name, district, benches_file=None):
     # Find benches inside the district
@@ -52,6 +55,7 @@ def get_benches(location_name, district, benches_file=None):
             )
     return benches_gdf
 
+
 def assign_benches_to_sidewalks(sidewalks_gdf, benches_gdf):
     # Buffer sidewalks slightly to include nearby benches
     buffer_sidewalks = sidewalks_gdf.geometry.buffer(
@@ -62,6 +66,6 @@ def assign_benches_to_sidewalks(sidewalks_gdf, benches_gdf):
     )
     return sidewalks_gdf
 
+
 def calculate_benches(budget, bench_cost):
     return int(budget // bench_cost)
-    

@@ -1,5 +1,6 @@
 import folium
 
+
 def draw_benches(map_object, benches_gdf):
     for bench in benches_gdf.iterrows():
         icon = folium.features.CustomIcon(
@@ -28,7 +29,9 @@ def draw_sidewalks(map_object, sidewalks_class, show_options, colors):
 
         # Add additional benches needed for okay and good classification
         if sidewalk[1]["bad"]:
-            tooltip_text += f"\nBenches to Convenient: {sidewalk[1]['benches_to_okay']} | "
+            tooltip_text += (
+                f"\nBenches to Convenient: {sidewalk[1]['benches_to_okay']} | "
+            )
         if sidewalk[1]["okay"] or sidewalk[1]["bad"]:
             tooltip_text += f"\nBenches to Optimal: {sidewalk[1]['benches_to_good']}"
 
@@ -93,6 +96,7 @@ def draw_sidewalks(map_object, sidewalks_class, show_options, colors):
             ).add_to(map_object)
 
     return map_object
+
 
 # Calculate the color based on the value of inhabitants
 def color_B_to_R(inhabitants, value):

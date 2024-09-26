@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def classify_sidewalks(sidewalks_gdf, good_street_value, okay_street_value):
     # Function to check if there is a bench every meters along the sidewalk
     def is_benched_every_x_meters(sidewalk, meters):

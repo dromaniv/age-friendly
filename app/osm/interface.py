@@ -14,6 +14,7 @@ from utils.simulation import *
 from utils.drawing import *
 from utils.classification import *
 
+
 def get_map(
     user,
     location_name,
