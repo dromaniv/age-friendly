@@ -14,6 +14,7 @@ from utils.simulation import *
 from utils.drawing import *
 from utils.classification import *
 
+
 def get_map(
     user,
     location_name,
@@ -88,7 +89,7 @@ def get_map(
     m = draw_sidewalks(m, sidewalks_gdf, show_options, colors)._repr_html_()
 
     # Calculate statistics
-    street_stats, general_stats = get_basic_statistics(sidewalks_gdf)
+    street_stats, general_stats = get_basic_statistics(sidewalks_gdf, district)
 
     # Add statistics as HTML
     m += "<br><br>"

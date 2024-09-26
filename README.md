@@ -20,9 +20,13 @@ We're currently in the process of developing a program that will effectively add
 
 2. Install [pip](https://pip.pypa.io/en/stable/installation/)
 
-In the `app` directory of the project:
+   In the `app` directory of the project:
 
-3. Run `pip install -r app/requirements.txt`
+3. Run `pip install -r requirements.txt`
+
+4. Run the Streamlit app with `streamlit run app.py`.
+
+   In case you want to use the old django UI:
 
 4. Run `python manage.py makemigrations | python manage.py migrate`
 
@@ -32,7 +36,7 @@ In the `app` directory of the project:
 
 ## Usage
 
-1. Open your browser and navigate to [localhost:8000](http://localhost:8000/)
+1. Open your browser and navigate to the [Streamlit UI](http://localhost:8501/) or the [Django UI](http://localhost:8000/)
     > Login with username `admin` and password `admin`
 2. Fill out the field with the city
 3. Fill out the street field or leave empty to show all streets

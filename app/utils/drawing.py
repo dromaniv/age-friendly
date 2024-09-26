@@ -1,5 +1,6 @@
 import folium
 
+
 def draw_benches(map_object, benches_gdf):
     for bench in benches_gdf.iterrows():
         icon = folium.features.CustomIcon(
@@ -20,17 +21,19 @@ def draw_sidewalks(map_object, sidewalks_class, show_options, colors):
         tooltip_text = f"Current Benches: {len(sidewalk[1].benches)} | "
 
         if sidewalk[1]["good"]:
-            tooltip_text += f"Status: Good"
+            tooltip_text += f"Status: Optimal"
         elif sidewalk[1]["okay"]:
-            tooltip_text += f"Status: Okay | "
+            tooltip_text += f"Status: Convenient | "
         elif sidewalk[1]["bad"]:
-            tooltip_text += f"Status: Bad | "
+            tooltip_text += f"Status: Insufficient | "
 
         # Add additional benches needed for okay and good classification
         if sidewalk[1]["bad"]:
-            tooltip_text += f"\nBenches to Okay: {sidewalk[1]['benches_to_okay']} | "
+            tooltip_text += (
+                f"\nBenches to Convenient: {sidewalk[1]['benches_to_okay']} | "
+            )
         if sidewalk[1]["okay"] or sidewalk[1]["bad"]:
-            tooltip_text += f"\nBenches to Good: {sidewalk[1]['benches_to_good']}"
+            tooltip_text += f"\nBenches to Optimal: {sidewalk[1]['benches_to_good']}"
 
         # Determine the street color and draw the GeoJson
         if sidewalk[1]["good"] and show_options["good_streets"]:
@@ -93,6 +96,7 @@ def draw_sidewalks(map_object, sidewalks_class, show_options, colors):
             ).add_to(map_object)
 
     return map_object
+
 
 # Calculate the color based on the value of inhabitants
 def color_B_to_R(inhabitants, value):
