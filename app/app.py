@@ -364,60 +364,60 @@ with st.sidebar:
 
         with st.expander("Map Options"):
             show_benches = st.checkbox("Show benches", value=True)
-            st.write("\n")
+            st.write("Street display options:")
             col1, col2 = st.columns(2)
             with col1:
-                show_good_streets = st.checkbox("Show good streets", value=True)
+                show_good_streets = st.checkbox("Age-friendly (optimal)", value=True)
             with col2:
                 good_street_color = st.color_picker(
-                    "Good street color", value="#24693D"
+                    "Optimal street color", value="#24693D", label_visibility="collapsed"
                 )
             col3, col4 = st.columns(2)
             with col3:
-                show_okay_streets = st.checkbox("Show okay streets", value=True)
+                show_okay_streets = st.checkbox("Age-friendly (convenient)", value=True)
             with col4:
                 okay_street_color = st.color_picker(
-                    "Okay street color", value="#6DB463"
+                    "Convenient street color", value="#6DB463", label_visibility="collapsed"
                 )
             col5, col6 = st.columns(2)
             with col5:
                 show_bad_streets = st.checkbox(
-                    "Show bad streets (multiple benches)", value=True
+                    "Insufficiently age-friendly (moderate)", value=True
                 )
             with col6:
                 bad_street_color = st.color_picker(
-                    "Bad street color (multiple benches)", value="#F57965"
+                    "Moderate street color", value="#F57965", label_visibility="collapsed"
                 )
             col9, col10 = st.columns(2)
             with col9:
                 show_one_streets = st.checkbox(
-                    "Show bad streets (one bench)", value=True
+                    "Insufficiently age-friendly (minimal)", value=True
                 )
             with col10:
                 one_street_color = st.color_picker(
-                    "Bad street color (one bench)", value="#E64E4B"
+                    "Minimal street color", value="#E64E4B", label_visibility="collapsed"
                 )
             col11, col12 = st.columns(2)
             with col11:
                 show_zero_streets = st.checkbox(
-                    "Show bad streets (zero benches)", value=True
+                    "Non-age-friendly", value=True
                 )
             with col12:
                 zero_street_color = st.color_picker(
-                    "Bad street color (zero benches)", value="#A3123A"
+                    "Non-age-friendly color", value="#A3123A", label_visibility="collapsed"
                 )
             col7, col8 = st.columns(2)
             with col7:
                 good_street_value = (
                     st.slider(
-                        "Good street distance", min_value=0, max_value=300, value=50
+                        "Optimal distance", min_value=0, max_value=300, value=50
                     )
                     / 111320
                 )
             with col8:
                 okay_street_value = (
                     st.slider(
-                        "Okay street distance", min_value=0, max_value=300, value=150
+                        "Convenient distance", min_value=0, max_value=300, value=150
                     )
                     / 111320
                 )

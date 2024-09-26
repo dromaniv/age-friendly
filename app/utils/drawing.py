@@ -20,17 +20,17 @@ def draw_sidewalks(map_object, sidewalks_class, show_options, colors):
         tooltip_text = f"Current Benches: {len(sidewalk[1].benches)} | "
 
         if sidewalk[1]["good"]:
-            tooltip_text += f"Status: Good"
+            tooltip_text += f"Status: Optimal"
         elif sidewalk[1]["okay"]:
-            tooltip_text += f"Status: Okay | "
+            tooltip_text += f"Status: Convenient | "
         elif sidewalk[1]["bad"]:
-            tooltip_text += f"Status: Bad | "
+            tooltip_text += f"Status: Insufficient | "
 
         # Add additional benches needed for okay and good classification
         if sidewalk[1]["bad"]:
-            tooltip_text += f"\nBenches to Okay: {sidewalk[1]['benches_to_okay']} | "
+            tooltip_text += f"\nBenches to Convenient: {sidewalk[1]['benches_to_okay']} | "
         if sidewalk[1]["okay"] or sidewalk[1]["bad"]:
-            tooltip_text += f"\nBenches to Good: {sidewalk[1]['benches_to_good']}"
+            tooltip_text += f"\nBenches to Optimal: {sidewalk[1]['benches_to_good']}"
 
         # Determine the street color and draw the GeoJson
         if sidewalk[1]["good"] and show_options["good_streets"]:
