@@ -321,8 +321,8 @@ with st.sidebar:
         [""] + districts,
         help="ℹSelect the district to highlight on the map.",
     )
-    if f"{city}.xlsx" in os.listdir(os.path.join(os.getcwd(), "static")):
-        heatmap_file = os.path.join(os.getcwd(), "static", f"{city}.xlsx")
+    if f"{city}.xlsx" in os.listdir("/streamlit/static"):
+        heatmap_file = f"/streamlit/static/{city}.xlsx"
     else:
         heatmap_file = st.file_uploader(
             "Upload heatmap file",
