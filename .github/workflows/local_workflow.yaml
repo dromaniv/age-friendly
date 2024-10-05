@@ -1,0 +1,57 @@
+name: Streamlit CI Pipeline
+
+# Run pipeline on push or pull request to main branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Define jobs
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Setup Python environment
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r streamlit/requirements.txt
+          
+      # Start Streamlit app in background and redirect logs to a file
+      - name: Start Streamlit app
+        run: |
+          nohup streamlit run streamlit/app.py > streamlit_log.txt 2>&1 &
+
+      # Give Streamlit some time to start
+      - name: Wait for Streamlit to start
+        run: sleep 10
+
+      # Check Streamlit logs for errors
+      - name: Check Streamlit app logs
+        run: |
+          if grep -i "error" streamlit_log.txt; then
+            echo "Streamlit failed to start. Check logs for details."
+            cat streamlit_log.txt
+            exit 1
+          else
+            echo "Streamlit started successfully."
+          fi
+
+      # Check if Streamlit app is running
+      - name: Test Streamlit app
+        run: |
+          curl -I http://localhost:8501
