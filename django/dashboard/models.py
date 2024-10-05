@@ -20,7 +20,7 @@ class AppSettings(models.Model):
         upload_to=settings.STATICFILES_DIRS[0],
         null=True,
         blank=True,
-        default="heatmap.xlsx",
+        default="Poznań.xlsx",
     )
 
     benches_file = models.FileField(
