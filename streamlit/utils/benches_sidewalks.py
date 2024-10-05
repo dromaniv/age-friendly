@@ -35,7 +35,6 @@ def get_sidewalks(location_name):
 def get_benches(location_name, district, benches_file=None):
     # Find benches inside the district
     benches_gdf = ox.features_from_place(location_name, tags={"amenity": "bench"})
-
     # Parse benches file
     if benches_file is not None:
         imported_benches = pd.read_excel(benches_file)
@@ -50,6 +49,10 @@ def get_benches(location_name, district, benches_file=None):
             print(
                 "The uploaded file does not contain `lat` and `lon` columns. Ignoring..."
             )
+    # Get rid of benches without geometry
+    benches_gdf = benches_gdf[benches_gdf.geometry.notnull()]
+    # Get rid of duplicates
+    benches_gdf = benches_gdf.drop_duplicates(subset="geometry")
     return benches_gdf
 
 
