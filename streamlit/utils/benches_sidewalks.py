@@ -3,6 +3,7 @@ import osmnx as ox
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point
+import streamlit as st
 
 geolocator = Nominatim(user_agent="age_friendly")
 
@@ -10,7 +11,7 @@ geolocator = Nominatim(user_agent="age_friendly")
 def get_location(location_name):
     return geolocator.geocode(location_name)
 
-
+@st.cache_data
 def get_sidewalks(location_name):
     # Find streets inside the district
     sidewalks_gdf = ox.features_from_place(location_name, tags={"highway": ["footway"]})
@@ -36,13 +37,7 @@ def get_benches(location_name, district, benches_file=None):
 
     # Parse benches file
     if benches_file is not None:
-        if benches_file.name.endswith(".csv"):
-            imported_benches = pd.read_csv(benches_file, sep=";")
-        elif benches_file.name.endswith(".xlsx"):
-            imported_benches = pd.read_excel(benches_file)
-        else:
-            print("Invalid file format. Only CSV and XLSX files are supported.")
-            return benches_gdf
+        imported_benches = pd.read_excel(benches_file)
         if "lon" in imported_benches.columns and "lat" in imported_benches.columns:
             imported_benches["geometry"] = imported_benches.apply(
                 lambda row: Point(row["lon"], row["lat"]), axis=1
@@ -51,10 +46,9 @@ def get_benches(location_name, district, benches_file=None):
             benches_gdf = benches_gdf[benches_gdf.within(district.geometry[0])]
         else:
             print(
-                "The uploaded file does not contain `lon` and `lat` columns. Ignoring..."
+                "The uploaded file does not contain `lat` and `lon` columns. Ignoring..."
             )
     return benches_gdf
-
 
 def assign_benches_to_sidewalks(sidewalks_gdf, benches_gdf):
     # Buffer sidewalks slightly to include nearby benches
