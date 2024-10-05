@@ -7,6 +7,7 @@ from geopy.geocoders import Nominatim
 
 geolocator = Nominatim(user_agent="age_friendly")
 
+
 @st.cache_data
 def generate_heatmap(location_name, heatmap_file_path):
     location = geolocator.geocode(location_name)

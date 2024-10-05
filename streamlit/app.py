@@ -45,10 +45,16 @@ with st.sidebar:
         [""] + districts,
         help="ℹ️ Select the district to highlight on the map.",
     )
-    if os.path.exists("streamlit/static/heatmaps") and f"{city}.xlsx" in os.listdir("streamlit/static/heatmaps"):
+    if os.path.exists("streamlit/static/heatmaps") and f"{city}.xlsx" in os.listdir(
+        "streamlit/static/heatmaps"
+    ):
         heatmap_file = f"streamlit/static/heatmaps/{city}.xlsx"
-    elif os.path.exists("/streamlit/static/heatmaps") and f"{city}.xlsx" in os.listdir("/streamlit/static/heatmaps"):
+        st.write("###### Heatmap file found.")
+    elif os.path.exists("/streamlit/static/heatmaps") and f"{city}.xlsx" in os.listdir(
+        "/streamlit/static/heatmaps"
+    ):
         heatmap_file = f"/streamlit/static/heatmaps/{city}.xlsx"
+        st.write("###### Heatmap file found.")
     else:
         heatmap_file = st.file_uploader(
             "Upload heatmap file",
@@ -73,17 +79,22 @@ with st.sidebar:
         else:
             location_name = f"{district_name}, {city}"
 
-        if os.path.exists("streamlit/static/benches") and f"{district_name}.xlsx" in os.listdir("streamlit/static/benches"):
+        if os.path.exists(
+            "streamlit/static/benches"
+        ) and f"{district_name}.xlsx" in os.listdir("streamlit/static/benches"):
             benches_file = f"streamlit/static/benches/{district_name}.xlsx"
-            st.write("Benches file found.")
-        elif os.path.exists("/streamlit/static/benches") and f"{district_name}.xlsx" in os.listdir("/streamlit/static/benches"):
+            # remove previous heatmap message:
+            st.write("###### Benches file found.")
+        elif os.path.exists(
+            "/streamlit/static/benches"
+        ) and f"{district_name}.xlsx" in os.listdir("/streamlit/static/benches"):
             benches_file = f"/streamlit/static/benches/{district_name}.xlsx"
-            st.write("Benches file found.") 
+            st.write("###### Benches file found.")
         else:
             benches_file = st.file_uploader(
-            "Upload benches file",
-            type=["xlsx"],
-            help="The file should contain only `lat` and `lon` columns with coordinates of benches.",
+                "Upload benches file",
+                type=["xlsx"],
+                help="The file should contain only `lat` and `lon` columns with coordinates of benches.",
             )
 
         # Simulation checkbox
@@ -172,7 +183,7 @@ else:
     step_text.text("Finding location...")
 
     # Find location
-    location =  geolocator.geocode(location_name)
+    location = geolocator.geocode(location_name)
 
     # Create Folium map
     progress_bar.progress(10)

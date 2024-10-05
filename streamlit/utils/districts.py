@@ -2,6 +2,7 @@ import requests
 import osmnx as ox
 import streamlit as st
 
+
 @st.cache_data
 def get_districts(city_name, admin_level=9):
     # Overpass API Query
@@ -32,6 +33,7 @@ def get_districts(city_name, admin_level=9):
     districts.sort()
 
     return districts
+
 
 @st.cache_data
 def get_district_geodataframe(location_name):

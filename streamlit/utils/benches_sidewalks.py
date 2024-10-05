@@ -11,6 +11,7 @@ geolocator = Nominatim(user_agent="age_friendly")
 def get_location(location_name):
     return geolocator.geocode(location_name)
 
+
 @st.cache_data
 def get_sidewalks(location_name):
     # Find streets inside the district
@@ -42,6 +43,7 @@ def get_benches(location_name, district, benches_file=None):
             imported_benches["geometry"] = imported_benches.apply(
                 lambda row: Point(row["lon"], row["lat"]), axis=1
             )
+            imported_benches["amenity"] = "import"
             benches_gdf = pd.concat([benches_gdf, imported_benches])
             benches_gdf = benches_gdf[benches_gdf.within(district.geometry[0])]
         else:
@@ -49,6 +51,7 @@ def get_benches(location_name, district, benches_file=None):
                 "The uploaded file does not contain `lat` and `lon` columns. Ignoring..."
             )
     return benches_gdf
+
 
 def assign_benches_to_sidewalks(sidewalks_gdf, benches_gdf):
     # Buffer sidewalks slightly to include nearby benches

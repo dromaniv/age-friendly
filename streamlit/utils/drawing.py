@@ -3,12 +3,20 @@ import folium
 
 def draw_benches(map_object, benches_gdf):
     for bench in benches_gdf.iterrows():
+        bench_coords = bench[1].geometry.centroid.coords[0]
+        # <a href="https://www.flaticon.com/free-icons/bench" title="bench icons">Bench icons created by Dooder - Flaticon</a>
         icon = folium.features.CustomIcon(
-            "https://cdn-icons-png.flaticon.com/256/2256/2256995.png",
+            "https://github.com/dromaniv/age-friendly/blob/dev/streamlit/static/images/bench.png?raw=true",
             icon_size=(15, 15),
         )
-        bench_coords = bench[1].geometry.centroid.coords[0]
-        tooltip = "Imported/simulated bench" if bench[1]["amenity"] != "bench" else None
+        tooltip = "Imported bench" if bench[1]["amenity"] == "import" else None
+        if bench[1]["amenity"] not in ["import", "bench"]:
+            # Normal bench icon but apply grayscale
+            icon = folium.features.CustomIcon(
+                "https://github.com/dromaniv/age-friendly/blob/dev/streamlit/static/images/bench_gray.png?raw=true",
+                icon_size=(15, 15),
+            )
+            tooltip = "Simulated bench"
         folium.Marker(
             location=[bench_coords[1], bench_coords[0]], icon=icon, tooltip=tooltip
         ).add_to(map_object)
