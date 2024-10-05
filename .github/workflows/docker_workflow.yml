@@ -17,7 +17,9 @@ jobs:
     
     # Build the Docker image
     - name: Build the Docker image
-      run: docker build ./streamlit --file Dockerfile --tag age-friendly:$(date +%s)
+      run: |
+        cd streamlit
+        docker build . --file Dockerfile --tag age-friendly:$(date +%s)
     
     # Run the Docker container and expose the port
     - name: Run the Docker container
