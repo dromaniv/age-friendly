@@ -34,7 +34,7 @@ jobs:
       # Start Streamlit app in background and redirect logs to a file
       - name: Start Streamlit app
         run: |
-          nohup streamlit run app.py > streamlit_log.txt 2>&1 &
+          nohup streamlit run app/app.py > streamlit_log.txt 2>&1 &
 
       # Give Streamlit some time to start
       - name: Wait for Streamlit to start
