@@ -34,7 +34,11 @@ def get_sidewalks(location_name):
 
 def get_benches(location_name, district, benches_file=None):
     # Find benches inside the district
-    benches_gdf = ox.features_from_place(location_name, tags={"amenity": "bench"})
+    try:
+        benches_gdf = ox.features_from_place(location_name, tags={"amenity": "bench"})
+    except:
+        st.error("We don't have data for this location :(")
+        st.stop()
     # Parse benches file
     if benches_file is not None:
         imported_benches = pd.read_excel(benches_file)
