@@ -19,12 +19,12 @@ jobs:
     - name: Build the Docker image
       run: |
         cd streamlit
-        docker build . --file Dockerfile --tag age-friendly:$(date +%s)
+        docker build . --file Dockerfile --tag age-friendly
     
     # Run the Docker container and expose the port
     - name: Run the Docker container
       run: |
-        docker run -d -p 8501:8501 --name age-friendly-container age-friendly:$(date +%s)
+        docker run -d -p 8501:8501 --name age-friendly-container age-friendly
     
     # Wait for the container to initialize Streamlit
     - name: Wait for Streamlit to start
