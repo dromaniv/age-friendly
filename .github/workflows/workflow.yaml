@@ -29,12 +29,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r app/requirements.txt
+          pip install -r streamlit/requirements.txt
           
       # Start Streamlit app in background and redirect logs to a file
       - name: Start Streamlit app
         run: |
-          nohup streamlit run app/app.py > streamlit_log.txt 2>&1 &
+          nohup streamlit run streamlit/app.py > streamlit_log.txt 2>&1 &
 
       # Give Streamlit some time to start
       - name: Wait for Streamlit to start
