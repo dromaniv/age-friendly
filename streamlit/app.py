@@ -33,13 +33,13 @@ geolocator = Nominatim(user_agent="street-highlighter")
 with st.sidebar:
     admin_level = st.slider(
         "Admin Level",
-        min_value=7,
-        max_value=11,
-        value=9,
+        min_value=1,
+        max_value=5,
+        value=3,
         help="Select the administrative level for what constitutes a district. Lower values are more general (e.g. city), higher values are more specific (e.g. neighborhood).",
     )
     city = st.text_input("City:", value="Poznań", help="ℹ️ Enter the name of the city.")
-    districts = get_districts(city, admin_level)
+    districts = get_districts(city, admin_level + 6)
     district_name = st.selectbox(
         "District:",
         [""] + districts,
