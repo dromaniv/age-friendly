@@ -1,0 +1,52 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    # Build the Docker image
+    - name: Build the Docker image
+      run: docker build streamlit --file Dockerfile --tag age-friendly:$(date +%s)
+    
+    # Run the Docker container and expose the port
+    - name: Run the Docker container
+      run: |
+        docker run -d -p 8501:8501 --name age-friendly-container age-friendly:$(date +%s)
+    
+    # Wait for the container to initialize Streamlit
+    - name: Wait for Streamlit to start
+      run: sleep 10
+
+    # Check Docker container logs for errors (case-insensitive)
+    - name: Check Streamlit logs for errors
+      run: |
+        docker logs age-friendly-container > streamlit_docker_log.txt
+        if grep -i "error" streamlit_docker_log.txt; then
+          echo "Streamlit encountered an error. Check logs for details."
+          cat streamlit_docker_log.txt
+          exit 1
+        else
+          echo "Streamlit started successfully inside the Docker container."
+        fi
+    
+    # Test if the Streamlit app is running inside the container
+    - name: Test Streamlit app
+      run: |
+        curl -I http://localhost:8501
+
+    # Clean up Docker resources after testing
+    - name: Stop and remove Docker container
+      run: |
+        docker stop age-friendly-container
+        docker rm age-friendly-container
