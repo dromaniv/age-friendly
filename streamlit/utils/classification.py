@@ -1,4 +1,5 @@
 import numpy as np
+import streamlit as st
 
 
 def classify_sidewalks(sidewalks_gdf, good_street_value, okay_street_value):
