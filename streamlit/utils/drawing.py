@@ -6,14 +6,14 @@ def draw_benches(map_object, benches_gdf):
         bench_coords = bench[1].geometry.centroid.coords[0]
         # <a href="https://www.flaticon.com/free-icons/bench" title="bench icons">Bench icons created by Dooder - Flaticon</a>
         icon = folium.features.CustomIcon(
-            "https://github.com/dromaniv/age-friendly/blob/dev/streamlit/static/images/bench.png?raw=true",
+            "https://github.com/dromaniv/age-friendly/blob/dev/streamlit/static/images/bench_gray.png?raw=true",
             icon_size=(15, 15),
         )
         tooltip = "Imported bench" if bench[1]["amenity"] == "import" else None
         if bench[1]["amenity"] not in ["import", "bench"]:
             # Normal bench icon but apply grayscale
             icon = folium.features.CustomIcon(
-                "https://github.com/dromaniv/age-friendly/blob/dev/streamlit/static/images/bench_gray.png?raw=true",
+                "https://github.com/dromaniv/age-friendly/blob/dev/streamlit/static/images/bench.png?raw=true",
                 icon_size=(15, 15),
             )
             tooltip = "Simulated bench"
