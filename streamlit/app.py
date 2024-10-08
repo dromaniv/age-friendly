@@ -38,10 +38,10 @@ with st.sidebar:
         value=3,
         help="Select the administrative level for what constitutes a district. Lower values are more general (e.g. city), higher values are more specific (e.g. neighborhood).",
     )
-    city = st.text_input("City:", value="Poznań", help="ℹ️ Enter the name of the city.")
+    city = st.text_input("City:", value="Poznań", help="ℹ️ Enter the name of the city.").capitalize().strip()
     districts = get_districts(city, admin_level + 6)
     district_name = st.selectbox(
-        "District:",
+        "Define area:",
         [""] + districts,
         help="ℹ️ Select the district to highlight on the map.",
     )
@@ -74,7 +74,7 @@ with st.sidebar:
         heatmap_map = generate_heatmap(city, heatmap_file)
     else:
         # Handle districts and main functionality
-        if district_name == "ALL":
+        if district_name == city:
             location_name = f"{city}"
         else:
             location_name = f"{district_name}, {city}"
