@@ -115,7 +115,7 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
     # Creating DataFrames for the tables
     street_stats = pd.DataFrame(
         {
-            "Type of Street": ["Good", "Okay", "Bad"],
+            "Type of Street": ["Optimal", "Convenient", "Insufficient"],
             "Number of Streets": [
                 len(good_streets),
                 len(okay_streets),
