@@ -47,7 +47,7 @@ def calculate_average_nearest_bench_distance(sidewalks_gdf):
     return avg_of_nearest_distances, avg_of_max_distances, avg_of_avg_distances
 
 
-    
+
 def parse_multilinestring(multilinestring_str):
     # Remove the 'MultiLineString ((' and '))' from the string
     multilinestring_str = multilinestring_str.replace("MultiLineString ((", "").replace(
@@ -88,21 +88,28 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
 
     avg_nearest_bench_distance, avg_max_nearest_bench_distance, avg_of_all_averages = calculate_average_nearest_bench_distance(sidewalks_gdf)
 
-
+    # Classify sidewalks by friendliness and bench count
     good_streets = sidewalks_gdf[sidewalks_gdf["good"]]
     okay_streets = sidewalks_gdf[sidewalks_gdf["okay"]]
-    bad_streets = sidewalks_gdf[sidewalks_gdf["bad"]]
+    insufficient_streets = sidewalks_gdf[(sidewalks_gdf["bad"]) & (sidewalks_gdf["benches"].apply(len) > 1)]
+    insufficient_minimal_streets = sidewalks_gdf[(sidewalks_gdf["bad"]) & (sidewalks_gdf["benches"].apply(len) == 1)]
+    non_age_friendly_streets = sidewalks_gdf[(sidewalks_gdf["bad"]) & (sidewalks_gdf["benches"].apply(len) == 0)]
 
-    raw_total_length = sidewalks_gdf["length"].sum()
-    total_length = raw_total_length * 111320 / 1000
+    # Calculate length and percentage statistics
+    total_length = sidewalks_gdf["length"].sum() * 111320 / 1000
     good_length = good_streets["length"].sum() * 111320 / 1000
     okay_length = okay_streets["length"].sum() * 111320 / 1000
-    bad_length = bad_streets["length"].sum() * 111320 / 1000
+    insufficient_length = insufficient_streets["length"].sum() * 111320 / 1000
+    insufficient_minimal_length = insufficient_minimal_streets["length"].sum() * 111320 / 1000
+    non_age_friendly_length = non_age_friendly_streets["length"].sum() * 111320 / 1000
 
     percent_good = (good_length / total_length) * 100
     percent_okay = (okay_length / total_length) * 100
-    percent_bad = (bad_length / total_length) * 100
+    percent_insufficient = (insufficient_length / total_length) * 100
+    percent_insufficient_minimal = (insufficient_minimal_length / total_length) * 100
+    percent_non_age_friendly = (non_age_friendly_length / total_length) * 100
 
+    # Total benches and overall friendliness
     current_benches = sidewalks_gdf["benches"].apply(len).sum()
     benches_needed_for_okay = sidewalks_gdf["benches_to_okay"].sum()
     benches_needed_for_good = sidewalks_gdf["benches_to_good"].sum()
@@ -112,7 +119,7 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
     )
     overall_friendliness = (
         sidewalks_gdf.apply(calculate_single_street_friendliness, axis=1)
-        * (sidewalks_gdf["length"] / raw_total_length)
+        * (sidewalks_gdf["length"] / sidewalks_gdf["length"].sum())
     ).sum() * 100
 
     number_of_street_segments = len(sidewalks_gdf)
@@ -122,7 +129,6 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
     else:
         # Load density information from the static file
         density_df = pd.read_excel(heatmap_file)
-
         # Ensure the density_df has the correct columns
         if not {"OBJECTID", "LICZBA", "boundaries"}.issubset(density_df.columns):
             raise KeyError(
@@ -152,23 +158,41 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
     # Creating DataFrames for the tables
     street_stats = pd.DataFrame(
         {
-            "Type of Street": ["Optimal", "Convenient", "Insufficient"],
+            "Type of Street": [
+                "Optimal",
+                "Convenient",
+                "Insufficiently age-friendly (moderate)",
+                "Insufficiently age-friendly (minimal)",
+                "Non-age friendly"
+            ],
             "Number of Streets": [
                 len(good_streets),
                 len(okay_streets),
-                len(bad_streets),
+                len(insufficient_streets),
+                len(insufficient_minimal_streets),
+                len(non_age_friendly_streets),
             ],
             "Total Length (km)": [
                 f"{good_length:.2f}",
                 f"{okay_length:.2f}",
-                f"{bad_length:.2f}",
+                f"{insufficient_length:.2f}",
+                f"{insufficient_minimal_length:.2f}",
+                f"{non_age_friendly_length:.2f}",
             ],
             "Percentage of Total Length": [
                 f"{percent_good:.2f}%",
                 f"{percent_okay:.2f}%",
-                f"{percent_bad:.2f}%",
+                f"{percent_insufficient:.2f}%",
+                f"{percent_insufficient_minimal:.2f}%",
+                f"{percent_non_age_friendly:.2f}%",
             ],
-            "Benches Needed": [benches_needed_for_good, benches_needed_for_okay, "N/A"],
+            "Benches Needed": [
+                benches_needed_for_good,
+                benches_needed_for_okay,
+                "N/A",
+                "N/A",
+                "N/A"
+            ],
         }
     )
     
@@ -179,18 +203,14 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
                 "Current Benches",
                 "Overall Friendliness",
                 "Number of Street Segments",
-                "Average of Distance to the Nearest Bench (m)",
-                "Average of Distance to the Furthest Bench (m)",
-                "Average Distance Between Benches (m)",
+                "Average of Distance to the Nearest Bench (m)"
             ],
             "Value": [
                 f"{total_length:.2f}",
                 f"{current_benches}",
                 f"{overall_friendliness:.2f}%",
                 f"{number_of_street_segments}",
-                f"{avg_nearest_bench_distance:.2f}",
-                f"{avg_max_nearest_bench_distance:.2f}",
-                f"{avg_of_all_averages:.2f}"
+                f"{avg_nearest_bench_distance:.2f}"
             ],
         }
     )
