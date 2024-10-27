@@ -17,7 +17,7 @@ def calculate_average_nearest_bench_distance(sidewalks_gdf):
 
     if sidewalks_gdf.crs.to_epsg() != 3857:
         sidewalks_gdf = sidewalks_gdf.to_crs(epsg=3857)
-    
+        
     nearest_distances = []       # Collect all minimum distances across all benches
     avg_distances = []           # Collect per-sidewalk average distances
     max_distances = []           # Collect per-sidewalk maximum distances
@@ -179,8 +179,8 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
                 "Current Benches",
                 "Overall Friendliness",
                 "Number of Street Segments",
-                "Average of Minimal Distance to the Nearest Bench (m)",
-                "Average of Maximal Distance to the Furthest Bench (m)",
+                "Average of Distance to the Nearest Bench (m)",
+                "Average of Distance to the Furthest Bench (m)",
                 "Average Distance Between Benches (m)",
             ],
             "Value": [
