@@ -85,7 +85,9 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
         density = 0
     else:
         # Load density information from the static file
-        density_df = pd.read_excel(heatmap_file)
+        density_df = pd.read_excel(
+            os.path.join(settings.STATICFILES_DIRS[0], heatmap_file.name)
+        )
 
         # Ensure the density_df has the correct columns
         if not {"OBJECTID", "LICZBA", "boundaries"}.issubset(density_df.columns):
