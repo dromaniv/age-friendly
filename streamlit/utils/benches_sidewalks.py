@@ -63,7 +63,7 @@ def get_benches(location_name, district, benches_file=None):
 def assign_benches_to_sidewalks(sidewalks_gdf, benches_gdf):
     # Buffer sidewalks slightly to include nearby benches
     buffer_sidewalks = sidewalks_gdf.geometry.buffer(
-        0.00007
+        0.0001
     )  # Adjust buffer size as needed
     sidewalks_gdf["benches"] = buffer_sidewalks.apply(
         lambda x: benches_gdf[benches_gdf.within(x)].geometry.tolist()
