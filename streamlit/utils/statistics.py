@@ -13,14 +13,15 @@ def calculate_single_street_friendliness(sidewalk):
     else:
         return 0
 
+
 def calculate_average_nearest_bench_distance(sidewalks_gdf):
 
     if sidewalks_gdf.crs.to_epsg() != 3857:
         sidewalks_gdf = sidewalks_gdf.to_crs(epsg=3857)
-        
-    nearest_distances = []       # Collect all minimum distances across all benches
-    avg_distances = []           # Collect per-sidewalk average distances
-    max_distances = []           # Collect per-sidewalk maximum distances
+
+    nearest_distances = []  # Collect all minimum distances across all benches
+    avg_distances = []  # Collect per-sidewalk average distances
+    max_distances = []  # Collect per-sidewalk maximum distances
 
     for _, sidewalk in sidewalks_gdf.iterrows():
         benches = sidewalk.benches
@@ -29,23 +30,32 @@ def calculate_average_nearest_bench_distance(sidewalks_gdf):
 
         sidewalk_distances = []
         for i, bench in enumerate(benches):
-            distances = [bench.distance(other_bench) for j, other_bench in enumerate(benches) if i != j]
+            distances = [
+                bench.distance(other_bench)
+                for j, other_bench in enumerate(benches)
+                if i != j
+            ]
             if distances:
                 min_distance = min(distances) * 111320  # Convert to meters
                 sidewalk_distances.append(min_distance)
-                nearest_distances.append(min_distance)  # Collecting all minimum distances
+                nearest_distances.append(
+                    min_distance
+                )  # Collecting all minimum distances
 
         # Compute sidewalk-specific statistics if distances were found
         if sidewalk_distances:
-            avg_distances.append(np.mean(sidewalk_distances))  # Average for each sidewalk
-            max_distances.append(np.max(sidewalk_distances))    # Maximum for each sidewalk
+            avg_distances.append(
+                np.mean(sidewalk_distances)
+            )  # Average for each sidewalk
+            max_distances.append(
+                np.max(sidewalk_distances)
+            )  # Maximum for each sidewalk
 
     avg_of_nearest_distances = np.mean(nearest_distances) if nearest_distances else 0
     avg_of_avg_distances = np.mean(avg_distances) if avg_distances else 0
     avg_of_max_distances = np.mean(max_distances) if max_distances else 0
 
     return avg_of_nearest_distances, avg_of_max_distances, avg_of_avg_distances
-
 
 
 def parse_multilinestring(multilinestring_str):
@@ -86,21 +96,31 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
     sidewalks_gdf = sidewalks_gdf.to_crs(epsg=3857)
     district = district.to_crs(epsg=3857)
 
-    avg_nearest_bench_distance, avg_max_nearest_bench_distance, avg_of_all_averages = calculate_average_nearest_bench_distance(sidewalks_gdf)
+    avg_nearest_bench_distance, avg_max_nearest_bench_distance, avg_of_all_averages = (
+        calculate_average_nearest_bench_distance(sidewalks_gdf)
+    )
 
     # Classify sidewalks by friendliness and bench count
     good_streets = sidewalks_gdf[sidewalks_gdf["good"]]
     okay_streets = sidewalks_gdf[sidewalks_gdf["okay"]]
-    insufficient_streets = sidewalks_gdf[(sidewalks_gdf["bad"]) & (sidewalks_gdf["benches"].apply(len) > 1)]
-    insufficient_minimal_streets = sidewalks_gdf[(sidewalks_gdf["bad"]) & (sidewalks_gdf["benches"].apply(len) == 1)]
-    non_age_friendly_streets = sidewalks_gdf[(sidewalks_gdf["bad"]) & (sidewalks_gdf["benches"].apply(len) == 0)]
+    insufficient_streets = sidewalks_gdf[
+        (sidewalks_gdf["bad"]) & (sidewalks_gdf["benches"].apply(len) > 1)
+    ]
+    insufficient_minimal_streets = sidewalks_gdf[
+        (sidewalks_gdf["bad"]) & (sidewalks_gdf["benches"].apply(len) == 1)
+    ]
+    non_age_friendly_streets = sidewalks_gdf[
+        (sidewalks_gdf["bad"]) & (sidewalks_gdf["benches"].apply(len) == 0)
+    ]
 
     # Calculate length and percentage statistics
     total_length = sidewalks_gdf["length"].sum() * 111320 / 1000
     good_length = good_streets["length"].sum() * 111320 / 1000
     okay_length = okay_streets["length"].sum() * 111320 / 1000
     insufficient_length = insufficient_streets["length"].sum() * 111320 / 1000
-    insufficient_minimal_length = insufficient_minimal_streets["length"].sum() * 111320 / 1000
+    insufficient_minimal_length = (
+        insufficient_minimal_streets["length"].sum() * 111320 / 1000
+    )
     non_age_friendly_length = non_age_friendly_streets["length"].sum() * 111320 / 1000
 
     percent_good = (good_length / total_length) * 100
@@ -163,7 +183,7 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
                 "Convenient",
                 "Insufficiently age-friendly (moderate)",
                 "Insufficiently age-friendly (minimal)",
-                "Non-age friendly"
+                "Non-age friendly",
             ],
             "Number of Streets": [
                 len(good_streets),
@@ -191,11 +211,11 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
                 benches_needed_for_okay,
                 "N/A",
                 "N/A",
-                "N/A"
+                "N/A",
             ],
         }
     )
-    
+
     general_stats = pd.DataFrame(
         {
             "Statistic": [
@@ -203,14 +223,14 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
                 "Current Benches",
                 "Overall Friendliness",
                 "Number of Street Segments",
-                "Average of Distance to the Nearest Bench (m)"
+                "Average of Distance to the Nearest Bench (m)",
             ],
             "Value": [
                 f"{total_length:.2f}",
                 f"{current_benches}",
                 f"{overall_friendliness:.2f}%",
                 f"{number_of_street_segments}",
-                f"{avg_nearest_bench_distance:.2f}"
+                f"{avg_nearest_bench_distance:.2f}",
             ],
         }
     )

@@ -49,7 +49,7 @@ def generate_heatmap(location_name, heatmap_file_path):
         control_scale=True,
     )
 
-    for index, row in df_filtered.iterrows():
+    for _, row in df_filtered.iterrows():
         # Split the string into individual coordinate pairs
         coordinate_pairs = row["boundaries"].split(", ")
 
@@ -78,6 +78,67 @@ def generate_heatmap(location_name, heatmap_file_path):
         ).add_to(m)
 
     return m._repr_html_()
+
+
+def generate_heatmap_layer(m, heatmap_file_path, district_gdf, opacity):
+    # Read data from Excel file
+    df = pd.read_excel(heatmap_file_path)
+
+    # Clean up 'boundaries' column in df
+    df["boundaries"] = df["boundaries"].str.replace(
+        r"^MultiLineString \(\(", "", regex=True
+    )
+    df["boundaries"] = df["boundaries"].str.replace(r"\)\)$", "", regex=True)
+
+    problematic_ids = [
+        2503,
+        2760,
+        3255,
+        3535,
+        3546,
+        3564,
+        3565,
+        3566,
+        3576,
+        3579,
+        3583,
+        3601,
+        3645,
+    ]
+    df_filtered = df[~df["OBJECTID"].isin(problematic_ids)]
+
+    # Create geometry from 'boundaries' column
+    def boundary_to_polygon(boundary_str):
+        coordinate_pairs = boundary_str.split(", ")
+        points = [tuple(map(float, pair.split())) for pair in coordinate_pairs]
+        polygon = Polygon(points)
+        return polygon
+
+    df_filtered["geometry"] = df_filtered["boundaries"].apply(boundary_to_polygon)
+    gdf = gpd.GeoDataFrame(df_filtered, geometry="geometry")
+    gdf.set_crs(epsg=4326, inplace=True)
+    district_gdf = district_gdf.to_crs(epsg=4326)
+
+    # Get polygons within the district
+    gdf_in_district = gpd.overlay(gdf, district_gdf, how="intersection")
+    inhabitants = sorted(set(df["LICZBA"].tolist()))
+
+    # Add polygons to the map
+    for _, row in gdf_in_district.iterrows():
+        color = color_B_to_R(inhabitants, row["LICZBA"])
+        feature = folium.GeoJson(
+            row["geometry"],
+            style_function=lambda x, color=color: {
+                "fillColor": color,
+                "color": color,
+                "weight": 2.5,
+                "fillOpacity": opacity,
+            },
+            tooltip=f"{row['LICZBA']} people",
+        )
+        feature.add_to(m)
+
+    return m
 
 
 def color_B_to_R(inhabitants, value):
