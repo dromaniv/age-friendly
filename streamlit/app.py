@@ -9,7 +9,7 @@ st.set_page_config(layout="wide", page_title="Age Friendly", page_icon="🗺️"
 
 # Import utilities
 from utils.districts import get_districts, get_district_geodataframe
-from utils.heatmap import generate_heatmap
+from utils.heatmap import generate_heatmap, generate_heatmap_layer
 from utils.map_utils import initialize_map, add_district_boundaries
 from utils.benches_sidewalks import (
     calculate_benches,
@@ -38,7 +38,11 @@ with st.sidebar:
         value=3,
         help="Select the administrative level for what constitutes a district. Lower values are more general (e.g. city), higher values are more specific (e.g. neighborhood).",
     )
-    city = st.text_input("City:", value="Poznań", help="ℹ️ Enter the name of the city.").capitalize().strip()
+    city = (
+        st.text_input("City:", value="Poznań", help="ℹ️ Enter the name of the city.")
+        .capitalize()
+        .strip()
+    )
     districts = get_districts(city, admin_level + 6)
     district_name = st.selectbox(
         "Define area:",
@@ -107,6 +111,11 @@ with st.sidebar:
             st.session_state.simulate_status = False
 
         with st.expander("Map Options"):
+            show_heatmap_overlay = st.checkbox("Show heatmap overlay", value=False)
+            if show_heatmap_overlay:
+                heatmap_opacity = st.slider(
+                    "Heatmap opacity", min_value=0.0, max_value=1.0, value=0.3
+                )
             show_benches = st.checkbox("Show benches", value=True)
             st.write("Street display options:")
             col1, col2 = st.columns(2)
@@ -236,7 +245,7 @@ else:
     )
 
     progress_bar.progress(80)
-    step_text.text("Drawing sidewalks...")
+    step_text.text("Drawing map...")
     show_options = {
         "good_streets": show_good_streets,
         "okay_streets": show_okay_streets,
@@ -252,6 +261,10 @@ else:
         "zero_street_color": zero_street_color,
     }
     m = draw_sidewalks(m, sidewalks_class, show_options, colors)
+
+    # Add heatmap overlay if enabled
+    if show_heatmap_overlay:
+        m = generate_heatmap_layer(m, heatmap_file, district, heatmap_opacity)
 
     # Calculate statistics
     progress_bar.progress(90)
