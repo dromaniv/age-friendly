@@ -1,97 +1,87 @@
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from shapely.geometry import LineString, MultiPoint, Point
+from shapely.geometry import Point
+from utils.classification import classify_sidewalks
 
+def add_optimized_benches(benches_gdf, sidewalks_gdf, num_benches, good_street_value, tolerance_factor=2):
 
-def add_simulated_benches(benches_gdf, sidewalks_gdf, longest_bad_streets, num_benches):
+    # Generate candidate places for each street
+    def generate_candidate_bench_placements(street):
+        street_geometry = street["geometry"]
+        street_length = street_geometry.length
+        # Double the number of candidate points
+        num_candidates = int(street_length // good_street_value) * tolerance_factor
+        
+        # Generate candidate points at intervals along the street geometry
+        candidate_points = [
+            street_geometry.interpolate(i * (street_length / num_candidates))
+            for i in range(1, num_candidates + 1)
+        ]
+        
+        # Calculate initial distances for each candidate
+        distances = []
+        for candidate in candidate_points:
+            if street["benches"]:
+                # Distance to nearest bench on the same street
+                min_distance = min(candidate.distance(bench) for bench in street["benches"])
+            else:
+                # If no benches on the street, use the distance to the nearest bench in general
+                min_distance = min(candidate.distance(bench) for bench in benches_gdf.geometry)
+            distances.append((candidate, min_distance))
+        
+        return distances
+
+    # Precompute all candidate points and distances for each street
+    street_candidates = {}
+    for _, street in sidewalks_gdf.iterrows():
+        street_candidates[street.name] = generate_candidate_bench_placements(street)
+
     benches_to_add = []
-    for _, street in longest_bad_streets.iterrows():
-        # Calculate the position to place the bench (in the middle of the street)
-        bench_point = street.geometry.interpolate(0.5, normalized=True)
-        bench = gpd.GeoDataFrame(
-            index=[0], crs=sidewalks_gdf.crs, geometry=[bench_point]
-        )
+    while num_benches > 0 and any(street_candidates.values()):
+        # Find the candidate with the maximum distance to the nearest existing bench on the same street
+        max_distance = 0
+        best_candidate = None
+        best_street = None
 
-        # Collect the bench in a list
-        benches_to_add.append(bench)
+        for street_id, candidates in street_candidates.items():
+            if not candidates:
+                continue
+            candidate, distance = max(candidates, key=lambda x: x[1])
+            if distance > max_distance:
+                max_distance = distance
+                best_candidate = candidate
+                best_street = street_id
 
-    # Concatenate the new benches to the existing benches GeoDataFrame
-    if benches_to_add:
-        benches_gdf = pd.concat([benches_gdf] + benches_to_add, ignore_index=True)
-
-    return benches_gdf
-
-
-def add_optimized_benches(benches_gdf, sidewalks_gdf, num_benches, good_street_value):
-    # Function to find the optimal bench placement point on a street
-    def find_optimal_bench_placement(street):
-        # Split the street into segments between existing benches
-        segments = split_street_by_benches(street["geometry"], street["benches"])
-
-        # Find the longest segment
-        longest_segment = max(segments, key=lambda seg: seg.length)
-
-        # Place the bench at the midpoint of the longest segment
-        bench_point = longest_segment.interpolate(0.5, normalized=True)
-        return gpd.GeoDataFrame(
-            index=[0], crs=sidewalks_gdf.crs, geometry=[bench_point]
-        )
-
-    def split_street_by_benches(street_geometry, benches):
-        # Ensure that the geometry is LineString and get boundary points
-        if isinstance(street_geometry, LineString):
-            coords = list(street_geometry.coords)
-            start_point = Point(coords[0])
-            end_point = Point(coords[-1])
-
-            # Ensure benches are in a list of Point objects
-            bench_points = []
-            if isinstance(benches, MultiPoint):
-                bench_points = list(benches.geoms)
-            elif isinstance(benches, Point):
-                bench_points = [benches]
-            elif isinstance(benches, list):
-                bench_points = [b for b in benches if isinstance(b, Point)]
-
-            # Combine and sort points along the street geometry
-            all_points = [start_point] + bench_points + [end_point]
-            all_points.sort(key=lambda point: street_geometry.project(point))
-
-            # Create segments between each pair of points
-            return [
-                LineString([all_points[i], all_points[i + 1]])
-                for i in range(len(all_points) - 1)
-            ]
-        else:
-            # If street_geometry is not a LineString, return an empty list
-            return []
-
-    # Identify streets that need benches
-    sidewalks_gdf["benches_needed_for_okay"] = sidewalks_gdf.apply(
-        lambda x: max(
-            0, int(np.ceil(x["length"] / good_street_value)) - len(x["benches"])
-        ),
-        axis=1,
-    )
-    streets_needing_benches = sidewalks_gdf[sidewalks_gdf.benches_needed_for_okay > 0]
-
-    # Sort these streets by the number of benches needed
-    prioritized_streets = streets_needing_benches.sort_values(
-        "benches_needed_for_okay", ascending=False
-    )
-
-    # Add benches to the streets with the highest priority first
-    benches_to_add = []
-    for _, street in prioritized_streets.iterrows():
-        if num_benches <= 0:
-            break
-        bench = find_optimal_bench_placement(street)
-        benches_to_add.append(bench)
+        if best_candidate is None:
+            break  # No more valid candidates
+        
+        # Place the selected bench
+        benches_to_add.append(best_candidate)
         num_benches -= 1
 
-    # Concatenate the new benches to the existing benches GeoDataFrame
+        # Update the street's list of benches
+        sidewalks_gdf.at[best_street, "benches"].append(best_candidate)
+
+        # Reclassify only the affected street to check if it meets the "good" status
+        affected_street = sidewalks_gdf.loc[[best_street]]
+        sidewalks_gdf.update(classify_sidewalks(affected_street, good_street_value, good_street_value))
+
+        # Update only the distances for candidates on this street
+        updated_candidates = []
+        for candidate, _ in street_candidates[best_street]:
+            # Calculate distance to the nearest bench on the same street
+            distance = min(candidate.distance(bench) for bench in sidewalks_gdf.at[best_street, "benches"])
+            updated_candidates.append((candidate, distance))
+        
+        # Only keep candidates with a positive distance
+        street_candidates[best_street] = [c for c in updated_candidates if c[1] > 0]
+
+    # Convert the added benches to a GeoDataFrame and merge with existing benches
     if benches_to_add:
-        benches_gdf = pd.concat([benches_gdf] + benches_to_add, ignore_index=True)
+        new_benches_gdf = gpd.GeoDataFrame(
+            geometry=benches_to_add, crs=sidewalks_gdf.crs
+        )
+        benches_gdf = pd.concat([benches_gdf, new_benches_gdf], ignore_index=True)
 
     return benches_gdf

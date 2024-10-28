@@ -2,25 +2,30 @@ import numpy as np
 import streamlit as st
 
 
-def classify_sidewalks(sidewalks_gdf, good_street_value, okay_street_value):
-    # Function to check if there is a bench every meters along the sidewalk
+def classify_sidewalks(sidewalks_gdf, good_street_value, okay_street_value, tolerance=1.1):
+
     def is_benched_every_x_meters(sidewalk, meters):
         geometry = sidewalk.geometry
         benches = sidewalk.benches
         length = geometry.length
         num_segments = int(np.ceil(length / meters))
 
-        for i in range(num_segments):
-            try:
-                segment_point = geometry.interpolate(i * meters)
+        # Check from both ends and choose the better result
+        for direction in [0, 1]:
+            # Adjust the starting point based on direction (0: start, 1: end)
+            for i in range(num_segments):
+                # Interpolate position along the length of the street
+                segment_point = geometry.interpolate(i * meters if direction == 0 else length - i * meters)
+                # Check for nearest bench within the given distance (with tolerance)
                 close_bench = any(
-                    [segment_point.distance(bench) <= meters for bench in benches]
+                    [segment_point.distance(bench) <= meters * tolerance for bench in benches]
                 )
                 if not close_bench:
-                    return False
-            except Exception as e:
-                print(e)
-        return True
+                    break
+            else:
+                # If we never break, all segments meet the condition
+                return True
+        return False
 
     # Classify sidewalks
     sidewalks_gdf["good"] = sidewalks_gdf.apply(
