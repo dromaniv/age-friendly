@@ -208,8 +208,8 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
             "Benches Needed": [
                 benches_needed_for_good,
                 benches_needed_for_okay,
-                "N/A",
-                "N/A",
+                len(non_age_friendly_streets) * 2 + len(insufficient_minimal_streets),
+                len(non_age_friendly_streets),
                 "N/A",
             ],
         }
