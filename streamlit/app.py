@@ -270,7 +270,7 @@ else:
     progress_bar.progress(90)
     step_text.text("Calculating statistics...")
     street_stats, general_stats = get_basic_statistics(
-        sidewalks_class, district, heatmap_file
+        sidewalks_class, benches_gdf, district, heatmap_file
     )
 
     # Generate statistics HTML

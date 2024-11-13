@@ -131,7 +131,7 @@ def generate_heatmap_layer(m, heatmap_file_path, district_gdf, opacity):
             style_function=lambda x, color=color: {
                 "fillColor": color,
                 "color": color,
-                "weight": 2.5,
+                "weight": opacity * 5 if opacity < 0.5 else 2.5,
                 "fillOpacity": opacity,
             },
             tooltip=f"{row['LICZBA']} people",

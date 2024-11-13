@@ -95,5 +95,6 @@ def add_optimized_benches(
             geometry=benches_to_add, crs=sidewalks_gdf.crs
         )
         benches_gdf = pd.concat([benches_gdf, new_benches_gdf], ignore_index=True)
+        benches_gdf = benches_gdf.drop_duplicates(subset=['geometry'])
 
     return benches_gdf
