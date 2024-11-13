@@ -91,7 +91,7 @@ def parse_multilinestring(multilinestring_str):
         return None  # Return None if no valid lines found
 
 
-def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
+def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
     # Reproject to a suitable projected CRS for accurate length and area calculations
     sidewalks_gdf = sidewalks_gdf.to_crs(epsg=3857)
     district = district.to_crs(epsg=3857)
@@ -129,8 +129,7 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
     percent_insufficient_minimal = (insufficient_minimal_length / total_length) * 100
     percent_non_age_friendly = (non_age_friendly_length / total_length) * 100
 
-    # Total benches and overall friendliness
-    current_benches = sidewalks_gdf["benches"].apply(len).sum()
+    current_benches = len(benches_gdf)
     benches_needed_for_okay = sidewalks_gdf["benches_to_okay"].sum()
     benches_needed_for_good = sidewalks_gdf["benches_to_good"].sum()
 
@@ -209,8 +208,8 @@ def get_basic_statistics(sidewalks_gdf, district, heatmap_file):
             "Benches Needed": [
                 benches_needed_for_good,
                 benches_needed_for_okay,
-                "N/A",
-                "N/A",
+                len(non_age_friendly_streets) * 2 + len(insufficient_minimal_streets),
+                len(non_age_friendly_streets),
                 "N/A",
             ],
         }
