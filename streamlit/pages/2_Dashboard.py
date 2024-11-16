@@ -4,8 +4,8 @@ import streamlit as st
 from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
 
-# Set page configuration
-st.set_page_config(layout="wide", page_title="Age Friendly", page_icon="🗺️")
+# Set page configuration for Dashboard
+st.set_page_config(layout="wide", page_title="Dashboard", page_icon="🗺️")
 
 # Import utilities
 from utils.districts import get_districts, get_district_geodataframe
@@ -36,7 +36,7 @@ with st.sidebar:
         min_value=1,
         max_value=5,
         value=3,
-        help="Select the administrative level for what constitutes a district. Lower values are more general (e.g. city), higher values are more specific (e.g. neighborhood).",
+        help="Select the administrative level for what constitutes a district. Lower values are more general (e.g., city), higher values are more specific (e.g., neighborhood).",
     )
     city = (
         st.text_input("City:", value="Poznań", help="ℹ️ Enter the name of the city.")
@@ -181,7 +181,7 @@ with st.sidebar:
                     / 111320
                 )
 
-# Main execution
+# Main execution for Dashboard
 if district_name == "":
     # Display heatmap when no district is selected
     st.components.v1.html(heatmap_map, height=1000)
