@@ -90,6 +90,27 @@ def parse_multilinestring(multilinestring_str):
     else:
         return None  # Return None if no valid lines found
 
+def calculate_benches_needed_for_bad_minimal_to_bad_moderate(sidewalks_gdf):
+    """
+    Calculate the number of benches needed to have minimally 2 benches for each 'bad' street with zero or one bench.
+    """
+    total_benches_needed = 0
+    # Take only the 'bad' streets
+    bad_streets = sidewalks_gdf[sidewalks_gdf["bad"]]
+    # Filter streets that have zero or one current benches
+    bad_streets_with_zero_or_one_bench = bad_streets[bad_streets["benches"].apply(len) <= 1]
+
+    for _, street in bad_streets_with_zero_or_one_bench.iterrows():
+        benches_to_okay = street["benches_to_okay"]
+        if benches_to_okay == 0:
+            continue  # Skip
+        elif benches_to_okay == 1:
+            total_benches_needed += 1
+        elif benches_to_okay >= 2:
+            total_benches_needed += 2
+
+    return total_benches_needed
+
 
 def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
     # Reproject to a suitable projected CRS for accurate length and area calculations
@@ -132,6 +153,9 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
     current_benches = len(benches_gdf)
     benches_needed_for_okay = sidewalks_gdf["benches_to_okay"].sum()
     benches_needed_for_good = sidewalks_gdf["benches_to_good"].sum()
+
+    benches_needed_for_bad_minimal_to_bad_moderate = calculate_benches_needed_for_bad_minimal_to_bad_moderate(sidewalks_gdf)
+
 
     sidewalks_gdf["friendliness"] = sidewalks_gdf.apply(
         calculate_single_street_friendliness, axis=1
@@ -208,7 +232,7 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
             "Benches Needed": [
                 benches_needed_for_good,
                 benches_needed_for_okay,
-                len(non_age_friendly_streets) * 2 + len(insufficient_minimal_streets),
+                benches_needed_for_bad_minimal_to_bad_moderate,
                 len(non_age_friendly_streets),
                 "N/A",
             ],
@@ -217,19 +241,21 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
 
     general_stats = pd.DataFrame(
         {
-            "Statistic": [
+            "Statistic and metric": [
                 "Total Length (km)",
-                "Current Benches",
-                "Overall Friendliness",
-                "Number of Street Segments",
                 "Average of Distance to the Nearest Bench (m)",
+                "Current Benches",
+                "Number of Street Segments",
+                "Density of Seniors (per km²)",
+                "Overall Friendliness",
             ],
             "Value": [
                 f"{total_length:.2f}",
-                f"{current_benches}",
-                f"{overall_friendliness:.2f}%",
-                f"{number_of_street_segments}",
                 f"{avg_nearest_bench_distance:.2f}",
+                f"{current_benches}",
+                f"{number_of_street_segments}",
+                f"{density:.2f}",
+                f"{overall_friendliness:.2f}%",
             ],
         }
     )
