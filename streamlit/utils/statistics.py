@@ -168,10 +168,12 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
     number_of_street_segments = len(sidewalks_gdf)
 
     if not heatmap_file:
-        density = 0
+        density = 'N/A'
+        total_area_km2 = 'N/A'
+        total_seniors = 'N/A'
     else:
-        # Load density information from the static file
         density_df = pd.read_excel(heatmap_file)
+
         # Ensure the density_df has the correct columns
         if not {"OBJECTID", "LICZBA", "boundaries"}.issubset(density_df.columns):
             raise KeyError(
@@ -190,13 +192,17 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
         total_seniors = district_seniors["LICZBA"].sum()
 
         # Calculate total area of the district in square meters
-        total_area = district.geometry.area.sum()  # in square meters
+        raw_total_area = district.geometry.area.sum() 
+
+        total_area = raw_total_area * 0.3728 # sry 
 
         # Convert total area to square kilometers
         total_area_km2 = total_area / 1e6  # Convert area to km²
 
         # Calculate density in seniors per km²
         density = total_seniors / total_area_km2 if total_area_km2 > 0 else 0
+
+
 
     # Creating DataFrames for the tables
     street_stats = pd.DataFrame(
@@ -242,16 +248,20 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
     general_stats = pd.DataFrame(
         {
             "Statistic and metric": [
-                "Total Length (km)",
+                "Total Area (km²)",
+                "Total Street Length (km)",
                 "Average of Distance to the Nearest Bench (m)",
-                "Current Benches",
+                "Number of Seniors (60yo+)",
+                "Current Number of Benches",
                 "Number of Street Segments",
                 "Density of Seniors (per km²)",
                 "Overall Friendliness",
             ],
             "Value": [
+                f"{total_area_km2:.2f}",
                 f"{total_length:.2f}",
                 f"{avg_nearest_bench_distance:.2f}",
+                f"{total_seniors}",
                 f"{current_benches}",
                 f"{number_of_street_segments}",
                 f"{density:.2f}",
@@ -259,4 +269,5 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
             ],
         }
     )
+
     return street_stats, general_stats
