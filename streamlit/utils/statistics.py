@@ -168,7 +168,9 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
     number_of_street_segments = len(sidewalks_gdf)
 
     if not heatmap_file:
-        density = 0
+        density = 'N/A'
+        total_area_km2 = 'N/A'
+        total_seniors = 'N/A'
     else:
         density_df = pd.read_excel(heatmap_file)
 
