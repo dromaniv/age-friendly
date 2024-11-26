@@ -192,7 +192,7 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
         # Calculate total area of the district in square meters
         raw_total_area = district.geometry.area.sum() 
 
-        total_area = raw_total_area * 0.3728
+        total_area = raw_total_area * 0.3728 # sry 
 
         # Convert total area to square kilometers
         total_area_km2 = total_area / 1e6  # Convert area to km²
