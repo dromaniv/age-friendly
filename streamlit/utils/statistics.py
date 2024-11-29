@@ -111,6 +111,10 @@ def calculate_benches_needed_for_bad_minimal_to_bad_moderate(sidewalks_gdf):
 
     return total_benches_needed
 
+def safe_format(value):
+    if isinstance(value, (int, float)):  
+        return f"{value:.2f}"
+    return value
 
 def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
     # Reproject to a suitable projected CRS for accurate length and area calculations
@@ -222,18 +226,18 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
                 len(non_age_friendly_streets),
             ],
             "Total Length (km)": [
-                f"{good_length:.2f}",
-                f"{okay_length:.2f}",
-                f"{insufficient_length:.2f}",
-                f"{insufficient_minimal_length:.2f}",
-                f"{non_age_friendly_length:.2f}",
+                safe_format(good_length),
+                safe_format(okay_length),
+                safe_format(insufficient_length),
+                safe_format(insufficient_minimal_length),
+                safe_format(non_age_friendly_length),
             ],
             "Percentage of Total Length": [
-                f"{percent_good:.2f}%",
-                f"{percent_okay:.2f}%",
-                f"{percent_insufficient:.2f}%",
-                f"{percent_insufficient_minimal:.2f}%",
-                f"{percent_non_age_friendly:.2f}%",
+                safe_format(percent_good) + "%",
+                safe_format(percent_okay) + "%",
+                safe_format(percent_insufficient) + "%",
+                safe_format(percent_insufficient_minimal) + "%",
+                safe_format(percent_non_age_friendly) + "%",
             ],
             "Benches Needed": [
                 benches_needed_for_good,
@@ -258,16 +262,16 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
                 "Overall Friendliness",
             ],
             "Value": [
-                f"{total_area_km2:.2f}",
-                f"{total_length:.2f}",
+                safe_format(total_area_km2),
+                safe_format(total_length),
                 f"{number_of_street_segments}",
                 f"{current_benches}",
-                f"{avg_nearest_bench_distance:.2f}",
+                safe_format(avg_nearest_bench_distance),
                 f"{total_seniors}",
-                f"{density:.2f}",
-                f"{overall_friendliness:.2f}%",
+                safe_format(density),
+                safe_format(overall_friendliness) + "%",
             ],
         }
-    )
+        )
 
     return street_stats, general_stats
