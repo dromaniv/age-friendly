@@ -171,9 +171,16 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
 
     number_of_street_segments = len(sidewalks_gdf)
 
+        # Calculate total area of the district in square meters
+    raw_total_area = district.geometry.area.sum() 
+
+    total_area = raw_total_area * 0.3728 # sry 
+
+    # Convert total area to square kilometers
+    total_area_km2 = total_area / 1e6  # Convert area to km²
+
     if not heatmap_file:
         density = 'N/A'
-        total_area_km2 = 'N/A'
         total_seniors = 'N/A'
     else:
         density_df = pd.read_excel(heatmap_file)
@@ -194,14 +201,6 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
         # Calculate total seniors within the district
         district_seniors = density_gdf[density_gdf.within(district.geometry.iloc[0])]
         total_seniors = district_seniors["LICZBA"].sum()
-
-        # Calculate total area of the district in square meters
-        raw_total_area = district.geometry.area.sum() 
-
-        total_area = raw_total_area * 0.3728 # sry 
-
-        # Convert total area to square kilometers
-        total_area_km2 = total_area / 1e6  # Convert area to km²
 
         # Calculate density in seniors per km²
         density = total_seniors / total_area_km2 if total_area_km2 > 0 else 0
