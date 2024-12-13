@@ -25,8 +25,11 @@ def draw_benches(map_object, benches_gdf):
 
 def draw_sidewalks(map_object, sidewalks_class, show_options, colors):
     for index, sidewalk in enumerate(sidewalks_class.iterrows()):
-        # Tooltip text initialization
-        tooltip_text = f"Current Benches: {len(sidewalk[1].benches)} | "
+        # Extract highway type (e.g., 'footway', 'pedestrian', 'living_street', etc.)
+        highway_type = sidewalk[1].get('highway', 'No Tag Available')
+
+        # Initialize tooltip text with sidewalk type and benches
+        tooltip_text = f"Type: {highway_type} | Current Benches: {len(sidewalk[1].benches)} | "
 
         if sidewalk[1]["good"]:
             tooltip_text += f"Status: Optimal"

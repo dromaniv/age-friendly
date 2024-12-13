@@ -13,23 +13,32 @@ def get_location(location_name):
 
 
 @st.cache_data
-def get_sidewalks(location_name):
-    # Find streets inside the district
-    sidewalks_gdf = ox.features_from_place(location_name, tags={"highway": ["footway"]})
-    # Data preprocessing:
-    # Remove polygons
+def get_sidewalks(location_name, highway_types=None):
+    # If no highway_types passed, use default
+    if not highway_types:
+        highway_types = ["footway", "pedestrian", "living_street"]
+
+    # Fetch features from OSM using the selected highway types
+    sidewalks_gdf = ox.features_from_place(
+        location_name,
+        tags={"highway": highway_types}
+    )
+
+    # Data preprocessing as before
     sidewalks_gdf = sidewalks_gdf[sidewalks_gdf.geometry.type != "Polygon"]
-    # Remove multipolygons
     sidewalks_gdf = sidewalks_gdf[sidewalks_gdf.geometry.type != "MultiPolygon"]
     # Remove crossings only if there are footways in the street
+
     if "footway" in sidewalks_gdf.columns:
-        if sidewalks_gdf[sidewalks_gdf["footway"] == "crossing"].shape[0] > 0:
+        if (sidewalks_gdf["footway"] == "crossing").any():
             sidewalks_gdf = sidewalks_gdf[sidewalks_gdf["footway"] != "crossing"]
     # Calculate the length of each sidewalk
+
     sidewalks_gdf["length"] = sidewalks_gdf.geometry.length
     # Remove short sidewalks from the original GeoDataFrame
     sidewalks_gdf = sidewalks_gdf[sidewalks_gdf["length"] >= 0.0005]
     return sidewalks_gdf
+
 
 
 def get_benches(location_name, district, benches_file=None):
