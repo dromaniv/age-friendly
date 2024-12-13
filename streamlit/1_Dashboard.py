@@ -38,6 +38,8 @@ with st.sidebar:
         value=3,
         help="Select the administrative level for what constitutes a district. Lower values are more general (e.g., city), higher values are more specific (e.g., neighborhood).",
     )
+
+
     city = (
         st.text_input("City:", value="Poznań", help="ℹ️ Enter the name of the city.")
         .capitalize()
@@ -49,6 +51,8 @@ with st.sidebar:
         [""] + districts,
         help="ℹ️ Select the district to highlight on the map.",
     )
+
+
     if os.path.exists("streamlit/static/heatmaps") and f"{city}.xlsx" in os.listdir(
         "streamlit/static/heatmaps"
     ):
@@ -181,6 +185,61 @@ with st.sidebar:
                     / 111320
                 )
 
+    with st.expander("Advanced Road Options"):
+        # Categorized lists of highway types
+        recommended_types = ["footway", "pedestrian", "living_street"]
+        optional_types = [
+            "path", "steps", "bridleway", "cycleway", "corridor", "platform",
+            "residential", "service", "unclassified", "road", "track"
+        ]
+        completeness_types = [
+            "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link",
+            "secondary", "secondary_link", "tertiary", "tertiary_link", "bus_guideway",
+            "escape", "raceway", "construction", "proposed"
+        ]
+
+        possible_types = recommended_types + optional_types + completeness_types
+
+        selected_highway_types = st.multiselect(
+            "Select the highway types to consider:",
+            possible_types,
+            default=recommended_types,
+            help=(
+                "**What is this and why can you choose?**\n"
+                "This section allows you to customize which OpenStreetMap 'highway' types "
+                "are included in the analysis. By default, we focus on the most pedestrian-friendly "
+                "environments—those safer and more comfortable for older adults. However, every region "
+                "is different, and you may want to consider additional types of roads, paths, or "
+                "infrastructure depending on local conditions, data availability, and specific goals. "
+                "Giving you the flexibility to choose ensures that this tool can adapt to different "
+                "urban landscapes and user needs.\n\n"
+                
+                "**Recommended Types (Default):**\n"
+                "- **footway:** Sidewalks or paths mainly for pedestrians.\n"
+                "- **pedestrian:** Streets or zones designed with priority for pedestrians.\n"
+                "- **living_street:** Roads where pedestrians share space with vehicles but have priority.\n\n"
+                "These are chosen by default because they represent environments that are typically "
+                "safe and accessible for older adults.\n\n"
+                
+                "**Optional Types (Might or Might Not Be Helpful):**\n"
+                "- **path, steps, bridleway:** Various pedestrian-friendly paths, trails, or stairs.\n"
+                "- **cycleway, corridor, platform:** Specialized ways like bike paths, indoor passages, "
+                "and transit platforms that might be relevant depending on local context.\n"
+                "- **residential, service, unclassified, road, track:** Streets commonly found in neighborhoods "
+                "or rural areas, potentially walkable but not always designed for pedestrians.\n\n"
+                "Consider these if your region’s conditions or the scope of your analysis require a broader look "
+                "at where older adults might walk.\n\n"
+                
+                "**For Completeness (Generally Not Recommended):**\n"
+                "- **motorway, trunk, primary, secondary, tertiary (and _link variants):** Major roads or "
+                "high-speed routes not meant for pedestrians.\n"
+                "- **bus_guideway, escape, raceway:** Specialized, niche ways rarely relevant for pedestrian use.\n"
+                "- **construction, proposed:** Roads in progress or planned, but not currently usable.\n\n"
+                "These are rarely necessary for a pedestrian accessibility analysis and might not add much value "
+                "unless you have very specific, edge-case reasons to include them."
+            )
+        )
+
 # Main execution for Dashboard
 if district_name == "":
     # Display heatmap when no district is selected
@@ -210,7 +269,7 @@ else:
     # Find sidewalks inside the district
     progress_bar.progress(30)
     step_text.text("Finding sidewalks...")
-    sidewalks_gdf = get_sidewalks(location_name)
+    sidewalks_gdf = get_sidewalks(location_name, selected_highway_types)
 
     # Find benches inside the district
     progress_bar.progress(40)
