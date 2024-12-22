@@ -211,11 +211,11 @@ def get_basic_statistics(sidewalks_gdf, benches_gdf, district, heatmap_file):
     street_stats = pd.DataFrame(
         {
             "Type of Street": [
-                "Optimal",
-                "Convenient",
+                "Age-friendly (optimal)",
+                "Age-friendly (convenient)",
                 "Insufficiently age-friendly (moderate)",
                 "Insufficiently age-friendly (minimal)",
-                "Non-age friendly",
+                "Not age-friendly",
             ],
             "Number of Streets": [
                 len(good_streets),
