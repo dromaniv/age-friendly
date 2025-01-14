@@ -164,10 +164,10 @@ with st.sidebar:
                 )
             col11, col12 = st.columns(2)
             with col11:
-                show_zero_streets = st.checkbox("Non-age-friendly", value=True)
+                show_zero_streets = st.checkbox("Not age-friendly", value=True)
             with col12:
                 zero_street_color = st.color_picker(
-                    "Non-age-friendly color",
+                    "Not age-friendly color",
                     value="#A3123A",
                     label_visibility="collapsed",
                 )
